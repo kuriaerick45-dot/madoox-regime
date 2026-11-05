@@ -1,0 +1,22 @@
+FIREBASE SETUP FOR MADOOX REGIME (about 10 minutes, free plan)
+
+1. Go to console.firebase.google.com, sign in, click "Add project", name it (e.g. madoox-regime).
+2. Build > Authentication > Get started > Sign-in method > enable "Email/Password".
+   (Optional) Templates tab: customise the "Password reset" email.
+3. Build > Firestore Database > Create database > production mode > pick a region near you.
+4. Firestore > Rules tab: replace the contents with firestore.rules from this package, click Publish.
+5. Project settings (gear) > General > Your apps > click the web icon </> > register the app.
+   Copy the firebaseConfig values.
+6. Open madoox-regime-firebase.html in a text editor, find "PASTE YOUR FIREBASE CONFIG HERE" and
+   replace each PASTE_... value with your values. Save.
+7. Authentication > Settings > Authorized domains: add the domain where you host the page
+   (Netlify / GitHub Pages address). For the Android app also add: appassets.androidplatform.net
+8. Host the file (rename to index.html) or copy it over app/src/main/assets/index.html in the Android
+   project and rebuild the APK.
+
+Notes
+- Passwords are now handled by Firebase (not stored in the database). Minimum length is 6.
+- Forgot password sends a real email with a reset link.
+- The first account that logs in becomes admin (Update / History buttons).
+- Fingerprint login is still a simulated scan and has no cloud account.
+- The assistant's open-ended answers still need Claude access and will not work outside Claude.

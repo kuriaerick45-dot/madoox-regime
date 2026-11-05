@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.token.email.lower(); }
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/app/admin)
+        && get(/databases/$(database)/documents/app/admin).data.ownerEmail.lower() == me();
+    }
+
+    // Each user can read/write only their own account and everything under it
+    match /users/{email}/{document=**} {
+      allow read, write: if signedIn() && me() == email.lower();
+    }
+
+    // First signed-in user may claim admin; after that only the admin can change it
+    match /app/admin {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.ownerEmail.lower() == me();
+      allow update, delete: if isAdmin();
+    }
+
+    // Update history and drafts: everyone signed in can read, only the admin can write
+    match /app/{doc} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

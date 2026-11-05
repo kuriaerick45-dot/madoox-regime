@@ -1,0 +1,3791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Madoox Regime</title>
+<style>
+  :root {
+    --blue-deep: #0a1f44;
+    --blue-mid: #123a75;
+    --blue-bright: #1f5fd6;
+    --blue-soft: #3f7fe0;
+    --white: #ffffff;
+    --off-white: #eaf1ff;
+    --gold: #d9b95c;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 20px;
+    background: #041027;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 12px;
+    color: var(--white);
+  }
+
+  /* Phone frame */
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 375px;
+    max-width: 100%;
+  }
+
+  .title-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 6px;
+    background: #071834;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-bottom: none;
+    border-radius: 14px 14px 0 0;
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+  .app-shell.titlebar-visible .title-bar { display: flex; }
+  .title-bar-left { display: flex; align-items: center; gap: 8px; }
+  .title-bar-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--gold);
+    display: inline-block;
+  }
+  .title-bar-name { color: var(--off-white); letter-spacing: 0.5px; }
+
+  .title-bar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+  .admin-actions { display: none; gap: 5px; }
+  .admin-actions.visible { display: flex; }
+  .title-btn {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.07);
+    color: var(--white);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .title-btn:hover { background: rgba(255,255,255,0.15); }
+  .title-btn:active { transform: translateY(1px); }
+
+  .save-as-bar {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: #071834;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-top: none;
+    padding: 10px 14px;
+  }
+  .save-as-bar.active { display: flex; }
+  .save-as-bar input {
+    flex: 1;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 14px;
+    padding: 7px 10px;
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    outline: none;
+  }
+
+  .file-status {
+    min-height: 20px;
+    font-size: 13px;
+    color: var(--gold);
+    text-align: center;
+    background: #071834;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-top: none;
+    padding: 4px 14px;
+  }
+  .file-status:empty { padding: 0; border: none; min-height: 0; }
+
+  .phone {
+    width: 375px;
+    max-width: 100%;
+    height: 780px;
+    margin-top: 10px;
+    background: linear-gradient(180deg, var(--blue-deep) 0%, var(--blue-mid) 55%, var(--blue-bright) 100%);
+    border-radius: 36px;
+    border: 6px solid #041027;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* floating ambient particles (effect) */
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    pointer-events: none;
+    animation: float 9s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0.5; }
+    50% { transform: translateY(-30px) translateX(10px); opacity: 1; }
+  }
+
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 22px;
+    background: #041027;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    z-index: 5;
+  }
+
+  .page-nav {
+    position: absolute;
+    top: 46px;
+    left: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 40;
+  }
+  .page-arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.32);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    line-height: 1;
+    color: var(--off-white);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .page-arrow:active { transform: scale(0.88); }
+  .page-arrow:hover { background: rgba(255,255,255,0.22); }
+  .phone.hide-page-nav .page-nav { display: none; }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 26px 0 26px;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    color: var(--off-white);
+  }
+
+  /* Screens */
+  .screen {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    padding: 34px 28px 24px 28px;
+    overflow-y: auto;
+    animation: screenIn 0.45s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes screenIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== AUTH SCREEN ===== */
+  .brand { text-align: center; margin-bottom: 10px; }
+
+  .crest {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 14px auto;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--blue-soft), var(--blue-deep) 75%);
+    border: 2px solid rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+  }
+
+  .brand h1 { font-size: 30px; font-weight: normal; letter-spacing: 1px; }
+  .brand p { font-size: 16px; color: var(--off-white); opacity: 0.85; margin-top: 6px; }
+
+  .tabs {
+    display: flex;
+    background: rgba(255,255,255,0.08);
+    border-radius: 999px;
+    padding: 4px;
+    margin: 22px 0 20px 0;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--off-white);
+    transition: background 0.25s ease, color 0.25s ease;
+    user-select: none;
+  }
+  .tab.active { background: var(--white); color: var(--blue-deep); }
+
+  .form { display: none; flex-direction: column; gap: 14px; }
+  .form.active { display: flex; }
+
+  .field label { display: block; font-size: 15px; color: var(--off-white); margin-bottom: 5px; }
+
+  .field input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 17px;
+    font-family: "Times New Roman", Times, serif;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    color: var(--white);
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .field input::placeholder { color: rgba(234,241,255,0.55); }
+  .field input:focus { border-color: var(--white); background: rgba(255,255,255,0.16); }
+
+  .row-between {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: var(--off-white);
+  }
+  .row-between a { color: var(--white); text-decoration: underline; }
+
+  .auth-msg {
+    min-height: 18px;
+    font-size: 14px;
+    text-align: center;
+  }
+  .auth-msg.error { color: #ff9a9a; }
+  .auth-msg.success { color: #7be0a4; }
+
+  .primary-btn:disabled {
+    opacity: 0.65;
+    cursor: default;
+  }
+
+  /* ===== FORGOT PASSWORD PANEL ===== */
+  .forgot-panel {
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .forgot-panel.active { display: flex; }
+
+  .forgot-step { display: none; flex-direction: column; gap: 14px; }
+  .forgot-step.active { display: flex; }
+
+  .forgot-back {
+    text-align: center;
+    font-size: 14px;
+    color: var(--off-white);
+    text-decoration: underline;
+    cursor: pointer;
+    opacity: 0.85;
+  }
+
+  .code-banner {
+    background: rgba(217, 185, 92, 0.14);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--off-white);
+  }
+  .code-banner strong { color: var(--gold); font-size: 20px; letter-spacing: 2px; }
+
+  #screen-auth.forgot-active .tabs,
+  #screen-auth.forgot-active #form-login,
+  #screen-auth.forgot-active #form-signup,
+  #screen-auth.forgot-active .divider,
+  #screen-auth.forgot-active #fingerprint-wrap,
+  #screen-auth.forgot-active #switch-line {
+    display: none;
+  }
+
+  .primary-btn {
+    margin-top: 4px;
+    padding: 14px 0;
+    font-size: 19px;
+    font-family: "Times New Roman", Times, serif;
+    border: none;
+    border-radius: 12px;
+    background: var(--white);
+    color: var(--blue-deep);
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .primary-btn:active { transform: translateY(1px) scale(0.99); }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 18px 0; color: var(--off-white); font-size: 14px;
+  }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.25); }
+
+  /* Fingerprint */
+  .fingerprint-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .fingerprint-btn {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+
+  .fingerprint-btn svg { width: 30px; height: 30px; stroke: var(--off-white); transition: stroke 0.3s ease; }
+
+  .fingerprint-btn .ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  .fingerprint-btn.scanning .ring {
+    animation: pulse-ring 1s ease-out infinite;
+  }
+
+  .fingerprint-btn.scanning svg { stroke: var(--gold); }
+
+  @keyframes pulse-ring {
+    0% { opacity: 0.9; transform: scale(0.85); }
+    100% { opacity: 0; transform: scale(1.5); }
+  }
+
+  .fingerprint-btn.success {
+    border-color: #5ad18a;
+    background: rgba(90, 209, 138, 0.15);
+  }
+  .fingerprint-btn.success svg { stroke: #5ad18a; }
+
+  .fingerprint-label { font-size: 14px; color: var(--off-white); opacity: 0.85; }
+
+  .switch-line {
+    text-align: center;
+    margin-top: auto;
+    padding-top: 18px;
+    font-size: 15px;
+    color: var(--off-white);
+  }
+  .switch-line a { color: var(--white); text-decoration: underline; cursor: pointer; }
+
+  /* ===== HOME SCREEN ===== */
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 22px;
+  }
+  .topbar .greeting { font-size: 22px; }
+  .topbar .greeting span { display: block; font-size: 14px; color: var(--off-white); opacity: 0.8; }
+  .avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--blue-soft), var(--blue-deep) 75%);
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center; font-size: 17px;
+  }
+
+  .streak-card {
+    background: rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .streak-card::after {
+    content: "";
+    position: absolute;
+    top: -40%; right: -20%;
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, rgba(217,185,92,0.35), transparent 70%);
+  }
+  .streak-card .label { font-size: 14px; color: var(--off-white); opacity: 0.85; }
+  .streak-card .value { font-size: 34px; color: var(--gold); margin-top: 4px; }
+  .progress-wrap { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.14); margin-top: 12px; overflow: hidden; position: relative; z-index: 1; }
+  .progress-bar { height: 100%; width: 0; background: var(--gold); border-radius: 999px; transition: width 0.4s ease; }
+  .progress-label { font-size: 14px; color: var(--off-white); opacity: 0.85; margin-top: 6px; position: relative; z-index: 1; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; position: relative; z-index: 1; }
+  .badge { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25); color: var(--off-white); opacity: 0.45; }
+  .badge.earned { background: var(--gold); color: var(--blue-deep); border-color: var(--gold); opacity: 1; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-value { font-size: 26px; color: var(--gold); }
+  .stat-label { font-size: 13px; color: var(--off-white); opacity: 0.8; margin-top: 4px; }
+
+  .week-chart { display: flex; align-items: flex-end; gap: 8px; height: 90px; margin-top: 12px; }
+  .week-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
+  .week-bar { width: 100%; border-radius: 6px 6px 0 0; background: rgba(255,255,255,0.15); transition: height 0.3s ease, background 0.3s ease; }
+  .week-bar.done { background: var(--gold); }
+  .week-bar-label { font-size: 12px; color: var(--off-white); opacity: 0.75; }
+
+  /* ===== DAILY LOG ===== */
+  .log-date-row { display: flex; align-items: center; gap: 10px; margin: 10px 0 12px 0; }
+  .log-nav { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; user-select: none; flex-shrink: 0; }
+  .log-nav:active { transform: scale(0.9); }
+  #log-date { flex: 1; min-width: 0; padding: 8px 10px; font-family: "Times New Roman", Times, serif; font-size: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: var(--white); color-scheme: dark; outline: none; }
+  .log-label { display: block; font-size: 14px; color: var(--off-white); opacity: 0.85; margin: 12px 0 5px 0; }
+  .log-input { width: 100%; padding: 10px 12px; font-family: "Times New Roman", Times, serif; font-size: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.08); color: var(--white); outline: none; }
+  .log-input::placeholder { color: rgba(234,241,255,0.5); }
+  .log-text { min-height: 64px; resize: vertical; }
+  .mood-row { display: flex; gap: 8px; }
+  .mood-btn { flex: 1; text-align: center; font-size: 24px; padding: 6px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); cursor: pointer; opacity: 0.6; transition: all 0.15s ease; user-select: none; }
+  .mood-btn.selected { opacity: 1; border-color: var(--gold); background: rgba(217,185,92,0.18); transform: scale(1.05); }
+  .log-save { width: 100%; margin-top: 14px; }
+  .log-history-title { font-size: 15px; color: var(--gold); margin: 16px 0 8px 0; }
+  .log-entry { border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; background: rgba(255,255,255,0.04); cursor: pointer; }
+  .log-entry-head { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+  .log-entry-meta { font-size: 13px; color: var(--off-white); opacity: 0.75; margin-top: 3px; }
+  .log-entry-snippet { font-size: 14px; color: var(--off-white); opacity: 0.9; margin-top: 4px; line-height: 1.35; }
+
+  .focus-slot {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .focus-slot:active { transform: scale(0.98); }
+
+  .focus-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: rgba(217, 185, 92, 0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px;
+    flex-shrink: 0;
+  }
+
+  .focus-text { flex: 1; }
+  .focus-label { font-size: 13px; color: var(--off-white); opacity: 0.75; }
+  .focus-value { font-size: 18px; margin-top: 2px; }
+
+  .focus-change {
+    font-size: 13px;
+    color: var(--gold);
+    text-decoration: underline;
+    flex-shrink: 0;
+  }
+
+  .section-title { font-size: 18px; margin: 4px 0 12px 0; color: var(--off-white); }
+
+  .task-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+  .task {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease, border-radius 0.15s ease;
+  }
+  .task:active { transform: scale(0.98); }
+  .task.done { background: rgba(90, 209, 138, 0.15); border-color: rgba(90, 209, 138, 0.4); }
+
+  .task-card { display: flex; flex-direction: column; }
+  .task-card.notes-open .task {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
+  }
+
+  .note-toggle {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    color: var(--off-white);
+    opacity: 0.7;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  .note-toggle:hover { opacity: 1; background: rgba(255,255,255,0.12); }
+  .note-toggle:active { transform: scale(0.9); }
+
+  .task-notepad {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px 14px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-top: 1px dashed rgba(255,255,255,0.15);
+    border-radius: 0 0 14px 14px;
+  }
+  .task-notepad.open { display: flex; }
+
+  .task-question {
+    font-size: 14px;
+    color: var(--gold);
+    line-height: 1.4;
+  }
+
+  .task-note-input {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 12px;
+    font-size: 15px;
+    font-family: "Times New Roman", Times, serif;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    outline: none;
+    resize: vertical;
+  }
+  .task-note-input::placeholder { color: rgba(234,241,255,0.5); }
+
+  .task-check {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 2px solid rgba(255,255,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+  .task.done .task-check { background: #5ad18a; border-color: #5ad18a; color: var(--blue-deep); }
+
+  .task-text { font-size: 17px; flex: 1; }
+  .task.done .task-text { text-decoration: line-through; opacity: 0.6; }
+
+  .nav-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-top: 14px;
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,0.15);
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 12px; color: var(--off-white); opacity: 0.65;
+    cursor: pointer; transition: opacity 0.2s ease, transform 0.15s ease;
+  }
+  .nav-item.active { opacity: 1; color: var(--gold); }
+  .nav-item:active { transform: scale(0.92); }
+  .nav-icon { font-size: 20px; }
+
+  /* ===== ABOUT SCREEN ===== */
+  .about-hero { text-align: center; margin-bottom: 22px; }
+  .about-hero .crest { margin-bottom: 12px; }
+  .about-hero h2 { font-size: 24px; font-weight: normal; }
+  .about-hero p.tag { font-size: 15px; color: var(--gold); margin-top: 4px; }
+
+  .about-block {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+    font-size: 16px;
+    color: var(--off-white);
+  }
+  .about-block strong { color: var(--white); }
+
+  .theme-swatches {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .theme-swatch {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--swatch);
+    border: 2px solid rgba(255,255,255,0.25);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .theme-swatch:active { transform: scale(0.9); }
+  .theme-swatch.selected {
+    border-color: var(--white);
+    box-shadow: 0 0 0 2px var(--swatch);
+  }
+  .theme-swatch.selected::after {
+    content: "\2713";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: var(--blue-deep);
+    font-weight: bold;
+  }
+
+  #admin-status { font-size: 15px; color: var(--off-white); margin-top: 6px; line-height: 1.5; }
+  .admin-claim-btn {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 15px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--gold);
+    background: rgba(217,185,92,0.15);
+    color: var(--white);
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .admin-claim-btn:active { transform: scale(0.97); }
+
+  /* ===== NEWS SCREEN ===== */
+  .news-header { text-align: center; margin-bottom: 18px; }
+  .news-header h2 { font-size: 24px; font-weight: normal; }
+  .news-header p { font-size: 15px; color: var(--off-white); opacity: 0.85; margin-top: 4px; }
+
+  .news-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+
+  .news-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+
+  .news-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .news-tag {
+    font-size: 12px;
+    color: var(--blue-deep);
+    background: var(--gold);
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .news-time {
+    font-size: 13px;
+    color: var(--off-white);
+    opacity: 0.65;
+  }
+
+  .news-title {
+    font-size: 18px;
+    margin-bottom: 6px;
+    line-height: 1.35;
+  }
+  .news-snippet {
+    font-size: 15px;
+    color: var(--off-white);
+    opacity: 0.85;
+    line-height: 1.45;
+  }
+
+  .news-disclaimer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--off-white);
+    opacity: 0.55;
+    margin-bottom: 14px;
+  }
+
+  /* ===== CHANGELOG SCREEN ===== */
+  .changelog-back {
+    font-size: 15px;
+    color: var(--off-white);
+    opacity: 0.85;
+    cursor: pointer;
+    margin-bottom: 10px;
+    align-self: flex-start;
+  }
+
+  .changelog-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .changelog-empty {
+    text-align: center;
+    font-size: 15px;
+    color: var(--off-white);
+    opacity: 0.7;
+    padding: 20px 0;
+  }
+
+  .changelog-entry {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .changelog-entry.current { border-color: var(--gold); background: rgba(217,185,92,0.1); }
+
+  .changelog-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .changelog-version {
+    font-size: 17px;
+    color: var(--gold);
+  }
+  .changelog-date {
+    font-size: 13px;
+    color: var(--off-white);
+    opacity: 0.65;
+  }
+  .changelog-notes {
+    font-size: 15px;
+    color: var(--off-white);
+    opacity: 0.9;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+  .changelog-current-tag {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--blue-deep);
+    background: var(--gold);
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+  .changelog-restore-btn {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 14px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    cursor: pointer;
+  }
+  .changelog-restore-btn:active { transform: scale(0.96); }
+
+  /* ===== PATCH PREVIEW OVERLAY ===== */
+  .patch-preview-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 8, 22, 0.72);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .patch-preview-overlay.active { display: flex; }
+
+  .patch-preview-card {
+    width: 340px;
+    max-width: 100%;
+    max-height: 80vh;
+    background: rgba(10, 25, 60, 0.98);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--white);
+  }
+  .patch-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    font-size: 18px;
+  }
+  .patch-preview-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .patch-preview-body h4 {
+    font-size: 15px;
+    color: var(--gold);
+    font-weight: normal;
+    margin: 12px 0 6px 0;
+  }
+  .patch-preview-body h4:first-child { margin-top: 0; }
+  .patch-preview-body ul { margin: 0 0 4px 18px; padding: 0; }
+  .patch-preview-body li { margin-bottom: 4px; }
+  .patch-swatch-preview {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-left: 6px;
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+  .patch-preview-actions {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px 16px 16px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+  }
+  .patch-preview-actions .primary-btn { flex: 1; margin-top: 0; }
+  .patch-preview-actions .title-btn { flex: 1; text-align: center; }
+
+  /* ===== PATCH EDITOR OVERLAY ===== */
+  .patch-editor-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 8, 22, 0.75);
+    align-items: center;
+    justify-content: center;
+    z-index: 105;
+    padding: 20px;
+  }
+  .patch-editor-overlay.active { display: flex; }
+
+  .patch-editor-card {
+    width: 360px;
+    max-width: 100%;
+    max-height: 85vh;
+    background: rgba(10, 25, 60, 0.98);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--white);
+  }
+
+  .patch-editor-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .patch-editor-hint {
+    font-size: 14px;
+    color: var(--off-white);
+    opacity: 0.8;
+    line-height: 1.4;
+  }
+  .patch-editor-textarea {
+    width: 100%;
+    min-height: 220px;
+    flex: 1;
+    padding: 10px 12px;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.45;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(0,0,0,0.25);
+    color: var(--off-white);
+    outline: none;
+    resize: vertical;
+    white-space: pre;
+  }
+  .patch-editor-msg {
+    min-height: 18px;
+    font-size: 13px;
+    color: var(--gold);
+  }
+  .patch-editor-msg.error { color: #ff9a9a; }
+
+  .patch-editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px 16px 16px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+  }
+  .patch-editor-actions .title-btn { flex: 1; text-align: center; }
+  .patch-editor-actions .primary-btn { flex-basis: 100%; margin-top: 0; }
+
+  .version-tag {
+    text-align: center;
+    font-size: 13px;
+    color: var(--off-white);
+    opacity: 0.6;
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  .home-indicator {
+    width: 130px; height: 5px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 3px;
+    margin: 10px auto 4px auto;
+  }
+
+  /* ===== BOT ASSISTANT (Home screen) ===== */
+  .bot-fab {
+    position: absolute;
+    right: 24px;
+    bottom: 92px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--blue-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.35);
+    z-index: 44;
+    transition: transform 0.15s ease;
+  }
+  .bot-fab:active { transform: scale(0.93); }
+  .bot-fab.nudge { animation: bot-nudge 2.2s ease-in-out infinite; }
+  @keyframes bot-nudge {
+    0%, 100% { box-shadow: 0 10px 22px rgba(0,0,0,0.35), 0 0 0 0 rgba(217,185,92,0.55); }
+    50% { box-shadow: 0 10px 22px rgba(0,0,0,0.35), 0 0 0 12px rgba(217,185,92,0); }
+  }
+  .bot-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px 12px; }
+  .bot-chip {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 13px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.28);
+    background: rgba(255,255,255,0.07);
+    color: var(--off-white);
+    cursor: pointer;
+  }
+  .bot-chip:active { transform: scale(0.96); }
+
+  .bot-panel {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 84px;
+    top: 70px;
+    background: rgba(10, 25, 60, 0.97);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    display: none;
+    flex-direction: column;
+    z-index: 45;
+    overflow: hidden;
+  }
+  .bot-panel.active { display: flex; }
+
+  .bot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    font-size: 18px;
+  }
+  .bot-close { cursor: pointer; opacity: 0.7; font-size: 16px; }
+
+  .bot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bot-msg {
+    max-width: 85%;
+    padding: 10px 13px;
+    border-radius: 14px;
+    font-size: 16px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+  .bot-msg.bot {
+    background: rgba(255,255,255,0.09);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .bot-msg.user {
+    background: var(--gold);
+    color: var(--blue-deep);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+
+  .bot-status {
+    padding: 0 16px;
+    font-size: 13px;
+    color: var(--gold);
+    min-height: 16px;
+  }
+
+  .bot-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+  }
+  .bot-input-row input {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 16px;
+    font-family: "Times New Roman", Times, serif;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    outline: none;
+  }
+  .bot-mic, .bot-send {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    font-size: 17px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .bot-mic.listening {
+    background: rgba(255, 90, 90, 0.25);
+    border-color: #ff8080;
+    animation: mic-pulse 1s ease-in-out infinite;
+  }
+  @keyframes mic-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,128,128,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255,128,128,0); }
+  }
+
+  /* ===== TECH SELECTION SCREEN ===== */
+  .tech-header { text-align: center; margin-bottom: 6px; }
+  .tech-header h2 { font-size: 24px; font-weight: normal; }
+  .tech-header p { font-size: 15px; color: var(--off-white); opacity: 0.85; margin-top: 4px; }
+
+  .computer-illustration {
+    width: 100%;
+    max-width: 240px;
+    margin: 18px auto 20px auto;
+    display: block;
+  }
+
+  .tech-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .tech-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 14px;
+    padding: 13px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  }
+  .tech-option:active { transform: scale(0.98); }
+  .tech-option.selected {
+    background: rgba(217, 185, 92, 0.14);
+    border-color: var(--gold);
+  }
+
+  .tech-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .tech-option.selected .tech-icon { background: var(--gold); color: var(--blue-deep); }
+
+  .tech-copy { flex: 1; }
+  .tech-text { font-size: 17px; }
+  .tech-note {
+    font-size: 13px;
+    color: var(--off-white);
+    opacity: 0.75;
+    line-height: 1.35;
+    margin-top: 3px;
+  }
+  .tech-radio {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .tech-option.selected .tech-radio { border-color: var(--gold); }
+  .tech-option.selected .tech-radio::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+
+  .tech-info {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    color: var(--off-white);
+    opacity: 0.75;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: opacity 0.15s ease, background 0.15s ease;
+  }
+  .tech-info:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+  .tech-info:active { transform: scale(0.9); }
+
+  .tech-detail-panel {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 84px;
+    top: 70px;
+    background: rgba(10, 25, 60, 0.97);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    display: none;
+    flex-direction: column;
+    z-index: 35;
+    overflow: hidden;
+  }
+  .tech-detail-panel.active { display: flex; }
+
+  .tech-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    font-size: 18px;
+  }
+
+  .tech-detail-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--off-white);
+  }
+
+  /* ===== FOCUS TIMER + QUOTE ===== */
+  .daily-quote { font-size: 14px; font-style: italic; color: var(--off-white); opacity: 0.85; text-align: center; margin: -8px 0 16px 0; line-height: 1.4; }
+  .timer-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; text-align: center; }
+  .timer-label { font-size: 14px; color: var(--off-white); opacity: 0.8; }
+  .timer-time { font-size: 40px; color: var(--gold); margin: 4px 0 8px 0; letter-spacing: 2px; }
+  .timer-presets { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
+  .timer-presets .title-btn.sel { border-color: var(--gold); background: rgba(217,185,92,0.18); }
+  .timer-actions { display: flex; gap: 8px; justify-content: center; }
+  .timer-actions .title-btn { font-size: 14px; padding: 7px 16px; }
+  .timer-card.running .timer-time { animation: bot-nudge 2.2s ease-in-out infinite; }
+
+  /* ===== PROFILE ===== */
+  .avatar.has-photo { background-size: cover; background-position: center; color: transparent; cursor: pointer; }
+  .avatar { cursor: pointer; }
+  .profile-photo { width: 130px; height: 130px; border-radius: 50%; margin: 10px auto 14px auto; background: radial-gradient(circle at 35% 30%, var(--blue-soft), var(--blue-deep) 75%); border: 3px solid var(--gold); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 52px; color: var(--white); box-shadow: 0 10px 22px rgba(0,0,0,0.35); }
+  .profile-photo.has-photo { color: transparent; }
+  .profile-name { text-align: center; font-size: 24px; }
+  .profile-email { text-align: center; font-size: 15px; color: var(--off-white); opacity: 0.8; margin: 4px 0 16px 0; word-break: break-all; }
+  .profile-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .profile-actions .title-btn { font-size: 15px; padding: 9px 16px; }
+  .profile-msg { text-align: center; font-size: 14px; color: var(--gold); min-height: 18px; margin-bottom: 14px; }
+
+  /* ===== FIT PHONE SCREENS: fill the whole display on real phones ===== */
+  @media (max-width: 600px) {
+    html, body { height: 100%; }
+    body { padding: 0; min-height: 100dvh; display: block; background: #0a1f44; }
+    .app-shell { width: 100%; max-width: none; height: 100dvh; }
+    .phone { width: 100%; max-width: none; flex: 1; min-height: 0; height: auto; margin-top: 0; border: none; border-radius: 0; box-shadow: none; }
+    .title-bar { border-radius: 0; border-left: none; border-right: none; }
+    .notch, .home-indicator { display: none; }
+    .status-bar { display: none; }
+    .screen { padding-top: 22px; padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+    .bot-fab { bottom: calc(86px + env(safe-area-inset-bottom)); right: 16px; }
+    .bot-panel, .tech-detail-panel { top: 20px; left: 10px; right: 10px; bottom: calc(76px + env(safe-area-inset-bottom)); }
+    .screen > * { flex-shrink: 0; }
+    .nav-bar { position: sticky; bottom: calc(-1 * max(18px, env(safe-area-inset-bottom))); background: #0f2d63; padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 20; margin-left: -28px; margin-right: -28px; padding-left: 14px; padding-right: 14px; }
+  }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // ===== PASTE YOUR FIREBASE CONFIG HERE (Firebase console > Project settings > Your apps > Web app) =====
+  window.FIREBASE_CONFIG = {
+    apiKey: "PASTE_API_KEY",
+    authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
+    projectId: "PASTE_PROJECT_ID",
+    storageBucket: "PASTE_PROJECT_ID.appspot.com",
+    messagingSenderId: "PASTE_SENDER_ID",
+    appId: "PASTE_APP_ID"
+  };
+</script>
+</head>
+<body>
+
+<div class="app-shell">
+  <div class="title-bar">
+    <div class="title-bar-left">
+      <span class="title-bar-dot"></span>
+      <span class="title-bar-name">Madoox Regime</span>
+    </div>
+    <div class="title-bar-actions">
+      <button class="title-btn" onclick="handleSave()" title="Save">Save</button>
+      <button class="title-btn" onclick="openSaveAs()" title="Save As">Save As</button>
+      <button class="title-btn" onclick="triggerImport()" title="Import">Import</button>
+      <span class="admin-actions" id="admin-actions">
+        <button class="title-btn" onclick="openPatchEditor()" title="Update">Update</button>
+        <button class="title-btn" onclick="openChangelog()" title="Update History">History</button>
+      </span>
+    </div>
+    <input type="file" id="import-file-input" accept="application/json" style="display:none" onchange="handleImportFile(event)" />
+    <input type="file" id="patch-file-input" accept="application/json" style="display:none" onchange="handlePatchFile(event)" />
+  </div>
+
+  <div class="save-as-bar" id="save-as-bar">
+    <input type="text" id="save-as-name" placeholder="File name" value="madoox-regime-save" />
+    <button class="title-btn" onclick="confirmSaveAs()">Save</button>
+    <button class="title-btn" onclick="closeSaveAs()">Cancel</button>
+  </div>
+  <div class="file-status" id="file-status"></div>
+
+<div class="phone hide-page-nav" id="phone">
+  <div class="notch"></div>
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>Madoox</span>
+  </div>
+
+  <!-- AUTH SCREEN -->
+  <div class="screen active" id="screen-auth">
+    <div class="brand">
+      <div class="crest">M</div>
+      <h1>Madoox Regime</h1>
+      <p>Structure your discipline, daily.</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-login" onclick="showForm('login')">Log In</div>
+      <div class="tab" id="tab-signup" onclick="showForm('signup')">Sign Up</div>
+    </div>
+
+    <form class="form active" id="form-login" onsubmit="return false;">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input id="login-email" type="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" placeholder="Enter your password" />
+      </div>
+      <div class="row-between">
+        <span>Stay signed in</span>
+        <a href="#" onclick="openForgot(event)">Forgot password?</a>
+      </div>
+      <button class="primary-btn" type="submit" id="login-btn" onclick="handleLogin()">Log In</button>
+      <div class="auth-msg" id="login-msg"></div>
+    </form>
+
+    <div class="forgot-panel" id="forgot-panel">
+      <div class="forgot-step active" id="forgot-step-request">
+        <div class="field">
+          <label for="forgot-email">Email</label>
+          <input id="forgot-email" type="email" placeholder="you@example.com" />
+        </div>
+        <button class="primary-btn" id="forgot-send-btn" onclick="sendResetCode()">Send code</button>
+        <div class="auth-msg" id="forgot-request-msg"></div>
+        <div class="forgot-back" onclick="closeForgot()">Back to log in</div>
+      </div>
+
+      <div class="forgot-step" id="forgot-step-verify">
+        <div class="code-banner" id="code-banner"></div>
+        <div class="field">
+          <label for="forgot-code">Verification code</label>
+          <input id="forgot-code" type="text" inputmode="numeric" placeholder="6-digit code" />
+        </div>
+        <div class="field">
+          <label for="forgot-new-password">New password</label>
+          <input id="forgot-new-password" type="password" placeholder="Create a new password" />
+        </div>
+        <button class="primary-btn" id="forgot-verify-btn" onclick="verifyResetCode()">Reset password</button>
+        <div class="auth-msg" id="forgot-verify-msg"></div>
+        <div class="forgot-back" onclick="closeForgot()">Back to log in</div>
+      </div>
+    </div>
+
+    <form class="form" id="form-signup" onsubmit="return false;">
+      <div class="field">
+        <label for="signup-name">Full name</label>
+        <input id="signup-name" type="text" placeholder="Your name" />
+      </div>
+      <div class="field">
+        <label for="signup-email">Email</label>
+        <input id="signup-email" type="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label for="signup-password">Password</label>
+        <input id="signup-password" type="password" placeholder="Create a password" />
+      </div>
+      <button class="primary-btn" type="submit" id="signup-btn" onclick="handleSignup()">Create Account</button>
+      <div class="auth-msg" id="signup-msg"></div>
+    </form>
+
+    <div class="divider">or use</div>
+
+    <div class="fingerprint-wrap" id="fingerprint-wrap" onclick="scanFingerprint()">
+      <div class="fingerprint-btn" id="fingerprint-btn">
+        <div class="ring"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a7 7 0 0 0-7 7c0 3.5 1 6 2 8"></path>
+          <path d="M12 6a5 5 0 0 0-5 5c0 2.5 0.5 4.5 1.5 6.5"></path>
+          <path d="M12 10a3 3 0 0 0-3 3c0 1.8 0.4 3.3 1 4.7"></path>
+          <path d="M15 8.5c0.8 1.2 1 2.6 1 4.5 0 2.5 0.5 4.5 1.5 6.5"></path>
+          <path d="M18 6c1.3 1.8 2 4 2 7 0 2 0.3 3.5 1 5"></path>
+        </svg>
+      </div>
+      <div class="fingerprint-label" id="fingerprint-label">Tap to scan fingerprint</div>
+    </div>
+
+    <div class="switch-line" id="switch-line">
+      New to Madoox Regime? <a onclick="showForm('signup')">Sign up</a>
+    </div>
+  </div>
+
+  <!-- TECH SELECTION SCREEN -->
+  <div class="screen" id="screen-tech">
+    <div class="tech-header">
+      <h2>Choose your focus</h2>
+      <p>Pick the technology track for your regime</p>
+    </div>
+
+    <svg class="computer-illustration" viewBox="0 0 240 170" xmlns="http://www.w3.org/2000/svg">
+      <!-- monitor -->
+      <rect x="40" y="14" width="160" height="104" rx="8" fill="rgba(255,255,255,0.08)" stroke="#eaf1ff" stroke-width="2"/>
+      <rect x="52" y="26" width="136" height="80" rx="3" fill="#0a1f44" stroke="#3f7fe0" stroke-width="1.5"/>
+      <!-- screen content: code lines -->
+      <rect x="62" y="36" width="60" height="6" rx="2" fill="#d9b95c"/>
+      <rect x="62" y="48" width="90" height="6" rx="2" fill="#eaf1ff" opacity="0.7"/>
+      <rect x="62" y="60" width="70" height="6" rx="2" fill="#eaf1ff" opacity="0.5"/>
+      <rect x="62" y="72" width="100" height="6" rx="2" fill="#3f7fe0"/>
+      <rect x="62" y="84" width="50" height="6" rx="2" fill="#eaf1ff" opacity="0.5"/>
+      <!-- stand -->
+      <rect x="110" y="118" width="20" height="18" fill="rgba(255,255,255,0.15)"/>
+      <rect x="90" y="136" width="60" height="8" rx="4" fill="rgba(255,255,255,0.2)"/>
+      <!-- keyboard -->
+      <rect x="60" y="150" width="120" height="14" rx="4" fill="rgba(255,255,255,0.12)" stroke="#eaf1ff" stroke-width="1.2"/>
+      <!-- tower -->
+      <rect x="204" y="40" width="26" height="90" rx="4" fill="rgba(255,255,255,0.08)" stroke="#eaf1ff" stroke-width="1.5"/>
+      <circle cx="217" cy="54" r="3" fill="#5ad18a"/>
+      <rect x="210" y="66" width="14" height="3" fill="#3f7fe0"/>
+      <rect x="210" y="74" width="14" height="3" fill="#3f7fe0"/>
+      <rect x="210" y="82" width="14" height="3" fill="#3f7fe0"/>
+    </svg>
+
+    <div class="tech-options" id="tech-options">
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#9000;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Web Development</div>
+          <div class="tech-note">Building websites and web apps with HTML, CSS, JavaScript, and frameworks.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Web Development')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#9881;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Artificial Intelligence</div>
+          <div class="tech-note">Systems that learn from data to reason, predict, and automate tasks.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Artificial Intelligence')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128274;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Cybersecurity</div>
+          <div class="tech-note">Protecting systems, networks, and data from unauthorized access and attacks.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Cybersecurity')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#9729;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Cloud Computing</div>
+          <div class="tech-note">Delivering servers, storage, and services over the internet on demand.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Cloud Computing')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128241;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Mobile Development</div>
+          <div class="tech-note">Building native and cross-platform apps for iOS and Android.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Mobile Development')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128202;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Data Science</div>
+          <div class="tech-note">Extracting patterns and insight from data using statistics and code.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Data Science')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#127918;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Game Development</div>
+          <div class="tech-note">Designing and building interactive games across consoles, PC, and mobile.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Game Development')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128736;</div>
+        <div class="tech-copy">
+          <div class="tech-text">DevOps &amp; Infrastructure</div>
+          <div class="tech-note">Automating how software is built, tested, deployed, and kept running.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('DevOps &amp; Infrastructure')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#127912;</div>
+        <div class="tech-copy">
+          <div class="tech-text">UI / UX Design</div>
+          <div class="tech-note">Designing how interfaces look, feel, and guide the people who use them.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('UI / UX Design')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128279;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Blockchain</div>
+          <div class="tech-note">Decentralized, tamper-resistant ledgers behind crypto and smart contracts.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Blockchain')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128225;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Networking</div>
+          <div class="tech-note">The hardware and protocols that connect and route data between devices.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Networking')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#129302;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Robotics</div>
+          <div class="tech-note">Combining sensors, hardware, and software to build machines that act.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Robotics')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128187;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Software Engineering</div>
+          <div class="tech-note">Designing, building, and maintaining reliable software systems at scale.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Software Engineering')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128421;</div>
+        <div class="tech-copy">
+          <div class="tech-text">IT Support</div>
+          <div class="tech-note">Troubleshooting and maintaining the hardware and systems people rely on.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('IT Support')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#128295;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Embedded Systems</div>
+          <div class="tech-note">Software running directly on hardware inside devices and machines.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Embedded Systems')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+      <div class="tech-option" onclick="selectTech(this)">
+        <div class="tech-icon">&#9989;</div>
+        <div class="tech-copy">
+          <div class="tech-text">Quality Assurance</div>
+          <div class="tech-note">Testing software systematically to catch bugs before users do.</div>
+        </div>
+        <div class="tech-info" onclick="event.stopPropagation(); showTechDetail('Quality Assurance')" title="Read more">&#9432;</div>
+        <div class="tech-radio"></div>
+      </div>
+    </div>
+
+    <button class="primary-btn" onclick="confirmTech()">Continue</button>
+
+    <div class="tech-detail-panel" id="tech-detail-panel">
+      <div class="tech-detail-header">
+        <span id="tech-detail-title">Title</span>
+        <span class="bot-close" onclick="closeTechDetail()">&#10005;</span>
+      </div>
+      <div class="tech-detail-body" id="tech-detail-body"></div>
+    </div>
+
+    <div class="nav-bar" style="margin-top:20px">
+      <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">&#8962;</div>Home</div>
+      <div class="nav-item" onclick="showScreen('news')"><div class="nav-icon">&#128240;</div>News</div>
+      <div class="nav-item active" onclick="showScreen('tech')"><div class="nav-icon">&#128187;</div>Focus</div>
+      <div class="nav-item" onclick="showScreen('about')"><div class="nav-icon">&#9432;</div>About</div>
+      <div class="nav-item" onclick="logOut()"><div class="nav-icon">&#8618;</div>Log Out</div>
+    </div>
+  </div>
+
+
+  <!-- HOME SCREEN -->
+  <div class="screen" id="screen-home">
+    <div class="topbar">
+      <div class="greeting"><span id="greeting-text" style="display:inline;font-size:inherit;opacity:1;color:inherit">Welcome back</span><span>Ready for today's regime</span></div>
+      <div class="avatar" id="home-avatar" onclick="showScreen('profile')" title="My profile">M</div>
+    </div>
+
+    <div class="focus-slot" id="focus-slot" onclick="showScreen('tech')">
+      <div class="focus-icon" id="focus-icon">&#128187;</div>
+      <div class="focus-text">
+        <div class="focus-label">Current focus</div>
+        <div class="focus-value" id="focus-value">Not set yet</div>
+      </div>
+      <div class="focus-change">Change</div>
+    </div>
+
+    <div class="streak-card">
+      <div class="label">Current streak</div>
+      <div class="value" id="streak-value">0 days</div>
+      <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+      <div class="progress-label" id="progress-label">0 of 4 tasks done today</div>
+      <div class="badges" id="badges"></div>
+    </div>
+
+    <div class="daily-quote" id="daily-quote"></div>
+
+    <div class="timer-card" id="timer-card">
+      <div class="timer-label">Focus timer</div>
+      <div class="timer-time" id="timer-time">25:00</div>
+      <div class="timer-presets" id="timer-presets">
+        <button class="title-btn sel" onclick="setTimerMinutes(25,this)">25 min</button>
+        <button class="title-btn" onclick="setTimerMinutes(45,this)">45 min</button>
+        <button class="title-btn" onclick="setTimerMinutes(60,this)">60 min</button>
+      </div>
+      <div class="timer-actions">
+        <button class="title-btn" id="timer-start" onclick="toggleTimer()">Start</button>
+        <button class="title-btn" onclick="resetTimer()">Reset</button>
+      </div>
+    </div>
+
+    <div class="section-title">Today's tasks</div>
+    <div class="task-list" id="task-list">
+      <div class="task-card">
+        <div class="task" onclick="toggleTask(this)">
+          <div class="task-check"></div>
+          <div class="task-text">Morning discipline block</div>
+          <div class="note-toggle" onclick="event.stopPropagation(); toggleNotepad(this)" title="Notes">&#128221;</div>
+        </div>
+        <div class="task-notepad">
+          <div class="task-question">What does your morning block include today?</div>
+          <textarea class="task-note-input" placeholder="Write your answer or notes here..." oninput="saveTaskNote(this)"></textarea>
+        </div>
+      </div>
+      <div class="task-card">
+        <div class="task" onclick="toggleTask(this)">
+          <div class="task-check"></div>
+          <div class="task-text">Read 20 pages</div>
+          <div class="note-toggle" onclick="event.stopPropagation(); toggleNotepad(this)" title="Notes">&#128221;</div>
+        </div>
+        <div class="task-notepad">
+          <div class="task-question">What book are you reading, and what stood out?</div>
+          <textarea class="task-note-input" placeholder="Write your answer or notes here..." oninput="saveTaskNote(this)"></textarea>
+        </div>
+      </div>
+      <div class="task-card">
+        <div class="task" onclick="toggleTask(this)">
+          <div class="task-check"></div>
+          <div class="task-text">Training session</div>
+          <div class="note-toggle" onclick="event.stopPropagation(); toggleNotepad(this)" title="Notes">&#128221;</div>
+        </div>
+        <div class="task-notepad">
+          <div class="task-question">What's today's training focus?</div>
+          <textarea class="task-note-input" placeholder="Write your answer or notes here..." oninput="saveTaskNote(this)"></textarea>
+        </div>
+      </div>
+      <div class="task-card">
+        <div class="task" onclick="toggleTask(this)">
+          <div class="task-check"></div>
+          <div class="task-text">Evening review</div>
+          <div class="note-toggle" onclick="event.stopPropagation(); toggleNotepad(this)" title="Notes">&#128221;</div>
+        </div>
+        <div class="task-notepad">
+          <div class="task-question">One win and one thing to improve from today?</div>
+          <textarea class="task-note-input" placeholder="Write your answer or notes here..." oninput="saveTaskNote(this)"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <div class="nav-item active" onclick="showScreen('home')"><div class="nav-icon">&#8962;</div>Home</div>
+      <div class="nav-item" onclick="showScreen('news')"><div class="nav-icon">&#128240;</div>News</div>
+      <div class="nav-item" onclick="showScreen('tech')"><div class="nav-icon">&#128187;</div>Focus</div>
+      <div class="nav-item" onclick="showScreen('about')"><div class="nav-icon">&#9432;</div>About</div>
+      <div class="nav-item" onclick="logOut()"><div class="nav-icon">&#8618;</div>Log Out</div>
+    </div>
+
+  </div>
+
+  <!-- ABOUT SCREEN -->
+  <div class="screen" id="screen-about">
+    <div class="about-hero">
+      <div class="crest">M</div>
+      <h2>Madoox Regime</h2>
+      <p class="tag">Discipline, made routine.</p>
+    </div>
+
+    <div class="about-block">
+      <strong>What it is.</strong> Madoox Regime helps you build and hold daily habits through a simple task routine and a visible streak, so discipline becomes something you can see, not just feel.
+    </div>
+
+    <div class="about-block">
+      <strong>Security.</strong> Sign in with your account, or unlock instantly with fingerprint authentication for faster, safer access.
+    </div>
+
+    <div class="about-block">
+      <strong>Philosophy.</strong> Small, repeated actions compound. The regime is not about intensity, it is about showing up.
+    </div>
+
+    <div class="about-block">
+      <strong>Appearance.</strong> Pick an accent color for your regime. This is saved to your device and account.
+      <div class="theme-swatches" id="theme-swatches">
+        <div class="theme-swatch selected" style="--swatch:#d9b95c" data-color="#d9b95c" data-name="Gold" onclick="chooseAccent(this)" title="Gold"></div>
+        <div class="theme-swatch" style="--swatch:#6fd0ff" data-color="#6fd0ff" data-name="Sky" onclick="chooseAccent(this)" title="Sky"></div>
+        <div class="theme-swatch" style="--swatch:#5ad18a" data-color="#5ad18a" data-name="Emerald" onclick="chooseAccent(this)" title="Emerald"></div>
+        <div class="theme-swatch" style="--swatch:#ff8fa3" data-color="#ff8fa3" data-name="Rose" onclick="chooseAccent(this)" title="Rose"></div>
+        <div class="theme-swatch" style="--swatch:#b98cff" data-color="#b98cff" data-name="Violet" onclick="chooseAccent(this)" title="Violet"></div>
+        <div class="theme-swatch" style="--swatch:#ff9d5c" data-color="#ff9d5c" data-name="Amber" onclick="chooseAccent(this)" title="Amber"></div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">&#8962;</div>Home</div>
+      <div class="nav-item" onclick="showScreen('news')"><div class="nav-icon">&#128240;</div>News</div>
+      <div class="nav-item" onclick="showScreen('tech')"><div class="nav-icon">&#128187;</div>Focus</div>
+      <div class="nav-item active" onclick="showScreen('about')"><div class="nav-icon">&#9432;</div>About</div>
+      <div class="nav-item" onclick="logOut()"><div class="nav-icon">&#8618;</div>Log Out</div>
+    </div>
+    <div class="version-tag" id="version-tag">Madoox Regime · Version 1.0</div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div class="screen" id="screen-profile">
+    <div class="changelog-back" onclick="showScreen('home')">&#8249; Back to Home</div>
+    <div class="news-header"><h2>My Profile</h2></div>
+    <div class="profile-photo" id="profile-photo">M</div>
+    <div class="profile-name" id="profile-name"></div>
+    <div class="profile-email" id="profile-email"></div>
+    <div class="profile-actions">
+      <button class="title-btn" onclick="document.getElementById('photo-input').click()">Upload picture</button>
+      <button class="title-btn" onclick="removePhoto()">Remove</button>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoFile(event)" />
+    <div class="profile-msg" id="profile-msg"></div>
+
+    <div class="nav-bar">
+      <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">&#8962;</div>Home</div>
+      <div class="nav-item" onclick="showScreen('news')"><div class="nav-icon">&#128240;</div>News</div>
+      <div class="nav-item" onclick="showScreen('tech')"><div class="nav-icon">&#128187;</div>Focus</div>
+      <div class="nav-item" onclick="showScreen('about')"><div class="nav-icon">&#9432;</div>About</div>
+      <div class="nav-item" onclick="logOut()"><div class="nav-icon">&#8618;</div>Log Out</div>
+    </div>
+  </div>
+
+  <!-- NEWS SCREEN -->
+  <div class="screen" id="screen-news">
+    <div class="news-header">
+      <h2>Daily News</h2>
+      <p>A quick technology roundup to start the day</p>
+    </div>
+
+    <div class="news-list" id="news-list">
+      <div class="news-card">
+        <div class="news-meta"><span class="news-tag">AI</span><span class="news-time">This morning</span></div>
+        <div class="news-title">New open-source model claims faster on-device reasoning</div>
+        <div class="news-snippet">A research lab released weights for a compact model aimed at running locally on phones and laptops without a cloud connection.</div>
+      </div>
+      <div class="news-card">
+        <div class="news-meta"><span class="news-tag">Cybersecurity</span><span class="news-time">6h ago</span></div>
+        <div class="news-title">Widely used library patches a critical authentication flaw</div>
+        <div class="news-snippet">Maintainers urge teams to update immediately after a bypass was found affecting session handling in several frameworks.</div>
+      </div>
+      <div class="news-card">
+        <div class="news-meta"><span class="news-tag">Cloud</span><span class="news-time">Yesterday</span></div>
+        <div class="news-title">Major cloud provider cuts egress pricing for smaller teams</div>
+        <div class="news-snippet">The change is aimed at startups and indie developers who were previously priced out of moving large datasets between regions.</div>
+      </div>
+      <div class="news-card">
+        <div class="news-meta"><span class="news-tag">Mobile</span><span class="news-time">Yesterday</span></div>
+        <div class="news-title">Cross-platform framework ships a big performance update</div>
+        <div class="news-snippet">The release focuses on faster startup times and smaller app bundle sizes for both iOS and Android builds.</div>
+      </div>
+      <div class="news-card">
+        <div class="news-meta"><span class="news-tag">Careers</span><span class="news-time">2 days ago</span></div>
+        <div class="news-title">Survey: demand for DevOps and platform engineering keeps rising</div>
+        <div class="news-snippet">Hiring data shows infrastructure-focused roles growing faster than general software roles this quarter.</div>
+      </div>
+    </div>
+
+    <div class="news-disclaimer">This is sample content for preview purposes, not a live news feed.</div>
+
+    <div class="nav-bar">
+      <div class="nav-item" onclick="showScreen('home')"><div class="nav-icon">&#8962;</div>Home</div>
+      <div class="nav-item active" onclick="showScreen('news')"><div class="nav-icon">&#128240;</div>News</div>
+      <div class="nav-item" onclick="showScreen('tech')"><div class="nav-icon">&#128187;</div>Focus</div>
+      <div class="nav-item" onclick="showScreen('about')"><div class="nav-icon">&#9432;</div>About</div>
+      <div class="nav-item" onclick="logOut()"><div class="nav-icon">&#8618;</div>Log Out</div>
+    </div>
+  </div>
+
+  <!-- CHANGELOG / UPDATE HISTORY SCREEN -->
+  <div class="screen" id="screen-changelog">
+    <div class="changelog-back" onclick="closeChangelog()">&#8249; Back</div>
+    <div class="news-header">
+      <h2>Update History</h2>
+      <p>Every patch applied to this app, newest first</p>
+    </div>
+
+    <div class="changelog-list" id="changelog-list">
+      <div class="changelog-empty" id="changelog-empty">No updates have been applied yet.</div>
+    </div>
+  </div>
+
+  <!-- MADOOX ASSISTANT (available on every page) -->
+  <div class="bot-fab nudge" id="bot-fab" onclick="toggleBot()" title="Ask Madoox Assistant">&#129302;</div>
+
+  <div class="bot-panel" id="bot-panel">
+    <div class="bot-header">
+      <span>Madoox Assistant</span>
+      <span class="bot-close" onclick="toggleBot()">&#10005;</span>
+    </div>
+    <div class="bot-messages" id="bot-messages">
+      <div class="bot-msg bot">Hi, I'm the Madoox Assistant. Ask me how the app works, or any technology question. You can type or tap the mic.</div>
+    </div>
+    <div class="bot-chips" id="bot-chips"></div>
+    <div class="bot-status" id="bot-status"></div>
+    <div class="bot-input-row">
+      <input type="text" id="bot-input" placeholder="Type or use the mic..." onkeydown="if(event.key==='Enter') sendBotText()" />
+      <div class="bot-mic" id="bot-mic" onclick="toggleVoice()">&#127908;</div>
+      <div class="bot-send" onclick="sendBotText()">&#10148;</div>
+    </div>
+  </div>
+
+  <div class="home-indicator"></div>
+</div>
+
+</div>
+
+<!-- PATCH EDITOR OVERLAY (your editable patch file) -->
+<div class="patch-editor-overlay" id="patch-editor-overlay">
+  <div class="patch-editor-card">
+    <div class="patch-preview-header">
+      <span>Your patch file</span>
+      <span class="bot-close" onclick="closePatchEditor()">&#10005;</span>
+    </div>
+    <div class="patch-editor-body">
+      <p class="patch-editor-hint">This is your own patch file — edit it whenever you want, save it as a draft, or preview and apply it right away.</p>
+      <textarea class="patch-editor-textarea" id="patch-editor-textarea" spellcheck="false"></textarea>
+      <div class="patch-editor-msg" id="patch-editor-msg"></div>
+    </div>
+    <div class="patch-editor-actions">
+      <button class="title-btn" onclick="triggerPatchFileLoad()">Load file...</button>
+      <button class="title-btn" onclick="saveDraft()">Save draft</button>
+      <button class="primary-btn" onclick="previewFromEditor()">Preview &amp; apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- PATCH PREVIEW OVERLAY -->
+<div class="patch-preview-overlay" id="patch-preview-overlay">
+  <div class="patch-preview-card">
+    <div class="patch-preview-header">
+      <span>Preview update</span>
+      <span class="bot-close" onclick="cancelPatchPreview()">&#10005;</span>
+    </div>
+    <div class="patch-preview-body" id="patch-preview-body"></div>
+    <div class="patch-preview-actions">
+      <button class="primary-btn" id="patch-apply-btn" onclick="confirmApplyPatch()">Apply update</button>
+      <button class="title-btn" onclick="cancelPatchPreview()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  // ===== TECH SECTOR DETAILS =====
+  const techDetails = {
+    'Web Development': 'Web development covers building the sites and applications people use in a browser, from the visual layer down to the logic that reacts to clicks. Front-end developers work with HTML, CSS, and JavaScript using frameworks like React, Vue, or Svelte, while back-end developers connect the interface to a server, database, and APIs. It is a good entry point into tech because you can see results immediately in the browser.',
+    'Artificial Intelligence': 'Artificial Intelligence is about building software that learns patterns from data instead of following only fixed, hand-written rules. It spans classic machine learning, deep learning, and large language models, and shows up in recommendation systems, image recognition, voice assistants, and chatbots. Work in this field ranges from research and model training to applying existing models to real products.',
+    'Cybersecurity': 'Cybersecurity focuses on defending systems, networks, and data from unauthorized access, breaches, and attacks. Work ranges from penetration testing and vulnerability research to configuring firewalls, monitoring for threats, and responding to incidents when something goes wrong. It rewards curiosity about how systems break and careful, methodical thinking.',
+    'Cloud Computing': 'Cloud computing delivers servers, storage, databases, and other infrastructure over the internet on demand, instead of a company running its own hardware. Providers like AWS, Azure, and Google Cloud let teams scale resources up or down quickly and pay only for what they use. Roles here include cloud architecture, cost optimization, and managing reliability at scale.',
+    'Mobile Development': 'Mobile development is building apps that run on phones and tablets, either natively with Swift for iOS and Kotlin for Android, or across both platforms at once with tools like React Native or Flutter. It involves designing for touch-first interfaces, handling limited screen space and offline behavior, and shipping through app stores.',
+    'Data Science': 'Data science turns raw data into insight and decisions by combining statistics, programming, and domain knowledge. Data scientists clean and explore datasets, build predictive models, run experiments, and visualize results so that findings are usable by others. It sits at the intersection of math, code, and communication.',
+    'Game Development': 'Game development blends programming, art, design, and audio to build interactive experiences. Developers typically use engines like Unity or Unreal to handle physics, rendering, and gameplay logic across PC, console, and mobile platforms, while designers shape mechanics, levels, and player experience.',
+    'DevOps & Infrastructure': 'DevOps focuses on automating and streamlining how software moves from written code into production, covering continuous integration, deployment pipelines, containerization, and infrastructure as code. The goal is faster, more reliable releases with less manual, error-prone work, and systems that recover quickly when something fails.',
+    'UI / UX Design': 'UI/UX design shapes how an interface looks and how it feels to use. UX design focuses on user research, information architecture, and usability, mapping out how people move through a product, while UI design handles the visual system: layout, color, typography, and the details of each interaction.',
+    'Blockchain': 'Blockchain is a decentralized, tamper-resistant way of recording data across many computers instead of one central authority. It underlies cryptocurrencies and smart contracts, and work in this space involves concepts like consensus mechanisms, cryptography, distributed ledgers, and increasingly, security-focused auditing of contract code.',
+    'Networking': 'Networking is the hardware, protocols, and infrastructure that let devices talk to each other, from a home Wi-Fi router to global internet routing between countries. Core topics include IP addressing, routers and switches, VPNs, and the network-security fundamentals that keep that traffic safe.',
+    'Robotics': 'Robotics combines mechanical engineering, electronics, and software to build machines that sense their environment and act on it. It draws on control systems, sensors, embedded programming, and increasingly artificial intelligence for perception and decision-making, applied to everything from factory arms to autonomous drones.',
+    'Software Engineering': 'Software engineering is the discipline of designing, building, testing, and maintaining reliable software systems at scale. It emphasizes system architecture, code quality, version control, testing practices, and the collaboration skills needed to work effectively with a team over the long life of a codebase.',
+    'IT Support': 'IT support keeps the hardware, software, and systems that people depend on running smoothly day to day. It includes troubleshooting devices, managing user accounts and permissions, resolving support tickets, and maintaining the networks and equipment an organization relies on to function.',
+    'Embedded Systems': 'Embedded systems are specialized computers built directly into devices and machines, from home appliances to cars to medical equipment, running software close to the hardware itself. Work here often involves C or C++, microcontrollers, tight memory and power constraints, and low-level debugging skills.',
+    'Quality Assurance': 'Quality assurance is the practice of testing software systematically to catch bugs and issues before they reach users. QA covers manual exploratory testing, writing automated test suites, regression testing after changes, and building processes that keep quality high as a product continues to evolve.'
+  };
+
+  function showTechDetail(name) {
+    const detail = techDetails[name] || 'More detail on this track is coming soon.';
+    document.getElementById('tech-detail-title').textContent = name;
+    document.getElementById('tech-detail-body').textContent = detail;
+    document.getElementById('tech-detail-panel').classList.add('active');
+  }
+
+  function closeTechDetail() {
+    document.getElementById('tech-detail-panel').classList.remove('active');
+  }
+
+  // ===== FILE MENU: Save / Save As / Import =====
+  let downloadsFn = null;
+  const downloadsReady = (async () => {
+    try { downloadsFn = await claude.use("downloads"); } catch (err) { downloadsFn = null; }
+  })();
+
+  function setFileStatus(text) {
+    document.getElementById('file-status').textContent = text || '';
+  }
+
+  function gatherAppData() {
+    const email = localStorage.getItem('madoox-current-user') || '';
+    const name = localStorage.getItem('madoox-current-name') || '';
+    const focusEl = document.querySelector('.tech-option.selected .tech-text');
+    const streakEl = document.querySelector('.streak-card .value');
+    const tasks = Array.from(document.querySelectorAll('#task-list .task-card')).map(card => {
+      const t = card.querySelector('.task');
+      const noteInput = card.querySelector('.task-note-input');
+      return {
+        name: t.querySelector('.task-text').textContent,
+        done: t.classList.contains('done'),
+        note: noteInput ? noteInput.value : ''
+      };
+    });
+
+    return {
+      app: 'Madoox Regime',
+      savedAt: new Date().toISOString(),
+      email: email,
+      name: name,
+      focus: focusEl ? focusEl.textContent : null,
+      streak: streakEl ? streakEl.textContent : null,
+      tasks: tasks
+    };
+  }
+
+  async function saveToFile(filename) {
+    await downloadsReady;
+    const data = JSON.stringify(gatherAppData(), null, 2);
+    if (!downloadsFn) {
+      try {
+        const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setFileStatus('Saved ' + filename);
+      } catch (err) { setFileStatus('Could not save the file.'); }
+      return;
+    }
+    setFileStatus('Saving...');
+    try {
+      await downloadsFn.save({ filename: filename, data: data });
+      setFileStatus('Saved ' + filename);
+    } catch (err) {
+      if (err && err.code === 'declined') {
+        setFileStatus('');
+      } else {
+        setFileStatus('Could not save the file.');
+      }
+    }
+  }
+
+  function handleSave() {
+    const email = localStorage.getItem('madoox-current-user');
+    const base = email ? email.split('@')[0] : 'madoox-regime';
+    saveToFile(base + '-save.json');
+  }
+
+  function openSaveAs() {
+    document.getElementById('save-as-bar').classList.add('active');
+  }
+
+  function closeSaveAs() {
+    document.getElementById('save-as-bar').classList.remove('active');
+  }
+
+  function confirmSaveAs() {
+    let name = document.getElementById('save-as-name').value.trim() || 'madoox-regime-save';
+    if (!name.toLowerCase().endsWith('.json')) name += '.json';
+    closeSaveAs();
+    saveToFile(name);
+  }
+
+  function triggerImport() {
+    document.getElementById('import-file-input').click();
+  }
+
+  async function handleImportFile(event) {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setFileStatus('Importing...');
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (data.email) {
+        localStorage.setItem('madoox-current-user', data.email);
+      }
+      if (data.name) {
+        localStorage.setItem('madoox-current-name', data.name);
+      }
+
+      if (data.streak) {
+        const streakEl = document.querySelector('.streak-card .value');
+        if (streakEl) streakEl.textContent = data.streak;
+      }
+
+      if (Array.isArray(data.tasks)) {
+        data.tasks.forEach(saved => {
+          document.querySelectorAll('#task-list .task-card').forEach(card => {
+            const el = card.querySelector('.task');
+            const name = el.querySelector('.task-text').textContent;
+            if (name === saved.name) {
+              el.classList.toggle('done', !!saved.done);
+              el.querySelector('.task-check').textContent = saved.done ? '\u2713' : '';
+              const noteInput = card.querySelector('.task-note-input');
+              if (noteInput && typeof saved.note === 'string') noteInput.value = saved.note;
+            }
+          });
+        });
+      }
+
+      if (data.focus) {
+        document.querySelectorAll('.tech-option').forEach(o => {
+          o.classList.toggle('selected', o.querySelector('.tech-text').textContent === data.focus);
+        });
+      }
+
+      await dbReady;
+      if (db && data.email) {
+        try {
+          const ref = db.collection('users').doc(data.email.toLowerCase());
+          const updates = {};
+          if (data.name) updates.name = data.name;
+          if (data.focus) updates.focus = data.focus;
+          if (Object.keys(updates).length) await ref.update(updates);
+
+          if (Array.isArray(data.tasks)) {
+            for (const saved of data.tasks) {
+              if (!saved.name) continue;
+              await ref.collection('tasks').doc(saved.name).set({
+                done: !!saved.done,
+                note: typeof saved.note === 'string' ? saved.note : ''
+              });
+            }
+          }
+        } catch (err) {}
+      }
+
+      setFileStatus('Imported ' + file.name);
+    } catch (err) {
+      setFileStatus('That file couldn\'t be read as a valid save.');
+    }
+  }
+
+  // ===== ADMIN ACCESS: only the claimed admin can modify updates =====
+  let isAdminUser = false;
+  let currentAdminEmail = null;
+
+  async function refreshAdminStatus() {
+    await dbReady;
+    currentAdminEmail = null;
+    if (db) {
+      try {
+        const snap = await db.collection('app').doc('admin').get();
+        if (snap.exists) currentAdminEmail = snap.data().ownerEmail || null;
+      } catch (err) {}
+    }
+    const email = (localStorage.getItem('madoox-current-user') || '').toLowerCase();
+    // Built-in admin: the first account to log in becomes admin automatically
+    if (db && !currentAdminEmail && email && email !== 'fingerprint-user@madoox.app') {
+      try {
+        await db.collection('app').doc('admin').set({ ownerEmail: email, claimedAt: new Date().toISOString() });
+        currentAdminEmail = email;
+      } catch (err) {}
+    }
+    isAdminUser = !!(currentAdminEmail && email && currentAdminEmail.toLowerCase() === email);
+
+    const actions = document.getElementById('admin-actions');
+    if (actions) actions.classList.toggle('visible', isAdminUser);
+
+  }
+
+  function renderAdminStatusBlock() {
+    const box = document.getElementById('admin-status');
+    if (!box) return;
+    const email = localStorage.getItem('madoox-current-user');
+
+    if (!currentAdminEmail) {
+      box.innerHTML = 'No admin has been set yet. Whoever claims it will be the only one able to apply or roll back updates.' +
+        (email ? '<br><button class="admin-claim-btn" onclick="claimAdmin()">Make me the admin</button>' : '<br>Log in first, then come back here to claim it.');
+      return;
+    }
+
+    if (isAdminUser) {
+      box.textContent = 'You are the admin (' + currentAdminEmail + '). You can modify updates from the title bar.';
+    } else {
+      box.textContent = 'Admin: ' + currentAdminEmail + '. Only they can modify or roll back updates.';
+    }
+  }
+
+  async function claimAdmin() {
+    const email = localStorage.getItem('madoox-current-user');
+    if (!email) return;
+    await dbReady;
+    if (!db) return;
+    try {
+      const snap = await db.collection('app').doc('admin').get();
+      if (snap.exists) {
+        await refreshAdminStatus();
+        return;
+      }
+      await db.collection('app').doc('admin').set({ ownerEmail: email, claimedAt: new Date().toISOString() });
+      await refreshAdminStatus();
+    } catch (err) {}
+  }
+
+  // ===== APP PATCH: preview, apply, history & rollback =====
+  function defaultTasksSnapshot() {
+    return [
+      { name: 'Morning discipline block', question: 'What does your morning block include today?' },
+      { name: 'Read 20 pages', question: 'What book are you reading, and what stood out?' },
+      { name: 'Training session', question: "What's today's training focus?" },
+      { name: 'Evening review', question: 'One win and one thing to improve from today?' }
+    ];
+  }
+
+  function defaultNewsSnapshot() {
+    return [
+      { tag: 'AI', time: 'This morning', title: 'New open-source model claims faster on-device reasoning', snippet: 'A research lab released weights for a compact model aimed at running locally on phones and laptops without a cloud connection.' },
+      { tag: 'Cybersecurity', time: '6h ago', title: 'Widely used library patches a critical authentication flaw', snippet: 'Maintainers urge teams to update immediately after a bypass was found affecting session handling in several frameworks.' },
+      { tag: 'Cloud', time: 'Yesterday', title: 'Major cloud provider cuts egress pricing for smaller teams', snippet: 'The change is aimed at startups and indie developers who were previously priced out of moving large datasets between regions.' },
+      { tag: 'Mobile', time: 'Yesterday', title: 'Cross-platform framework ships a big performance update', snippet: 'The release focuses on faster startup times and smaller app bundle sizes for both iOS and Android builds.' },
+      { tag: 'Careers', time: '2 days ago', title: 'Survey: demand for DevOps and platform engineering keeps rising', snippet: 'Hiring data shows infrastructure-focused roles growing faster than general software roles this quarter.' }
+    ];
+  }
+
+  let pendingPatch = null;
+
+  async function handlePatchFile(event) {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      JSON.parse(text); // validate only; keep the original formatting in the editor
+      document.getElementById('patch-editor-textarea').value = text;
+      setEditorMsg('Loaded ' + file.name + ' into the editor.', false);
+    } catch (err) {
+      setEditorMsg('That file isn\'t valid JSON.', true);
+    }
+  }
+
+  function triggerPatchFileLoad() {
+    document.getElementById('patch-file-input').click();
+  }
+
+  function setEditorMsg(text, isError) {
+    const el = document.getElementById('patch-editor-msg');
+    el.textContent = text || '';
+    el.className = 'patch-editor-msg' + (isError ? ' error' : '');
+  }
+
+  const patchTemplate = JSON.stringify({
+    patchVersion: '1.1.0',
+    notes: 'Describe what this update changes',
+    tasks: [
+      { name: 'Deep work block', question: 'What did you focus on?' }
+    ],
+    news: [
+      { tag: 'AI', time: 'Today', title: 'Headline here', snippet: 'Short summary here.' }
+    ],
+    accentColor: '#d9b95c'
+  }, null, 2);
+
+  async function openPatchEditor() {
+    await refreshAdminStatus();
+    if (!isAdminUser) {
+      setFileStatus('Only the admin can modify updates.');
+      return;
+    }
+    const textarea = document.getElementById('patch-editor-textarea');
+    setEditorMsg('', false);
+
+    await dbReady;
+    let draftText = null;
+    if (db) {
+      try {
+        const snap = await db.collection('app').doc('patchDraft').get();
+        if (snap.exists && typeof snap.data().content === 'string') {
+          draftText = snap.data().content;
+        }
+      } catch (err) {}
+    }
+
+    textarea.value = draftText !== null ? draftText : patchTemplate;
+    document.getElementById('patch-editor-overlay').classList.add('active');
+  }
+
+  function closePatchEditor() {
+    document.getElementById('patch-editor-overlay').classList.remove('active');
+  }
+
+  async function saveDraft() {
+    const content = document.getElementById('patch-editor-textarea').value;
+    await dbReady;
+    if (!db) {
+      setEditorMsg('Drafts need the backend, which isn\'t available right now.', true);
+      return;
+    }
+    try {
+      JSON.parse(content);
+    } catch (err) {
+      setEditorMsg('Heads up: this isn\'t valid JSON yet, but I saved it as-is.', true);
+      await db.collection('app').doc('patchDraft').set({ content: content, savedAt: new Date().toISOString() });
+      return;
+    }
+    try {
+      await db.collection('app').doc('patchDraft').set({ content: content, savedAt: new Date().toISOString() });
+      setEditorMsg('Draft saved. It\'ll be here next time you open Update.', false);
+    } catch (err) {
+      setEditorMsg('Could not save the draft.', true);
+    }
+  }
+
+  function previewFromEditor() {
+    const content = document.getElementById('patch-editor-textarea').value;
+    let patch;
+    try {
+      patch = JSON.parse(content);
+    } catch (err) {
+      setEditorMsg('This isn\'t valid JSON — fix it before previewing.', true);
+      return;
+    }
+    pendingPatch = patch;
+    showPatchPreview(patch);
+  }
+
+  function showPatchPreview(patch) {
+    const body = document.getElementById('patch-preview-body');
+    let html = '';
+
+    html += '<h4>Version</h4>' + escapeHtml(patch.patchVersion || 'Unversioned');
+    if (patch.notes) {
+      html += '<h4>Notes</h4>' + escapeHtml(patch.notes);
+    }
+    if (Array.isArray(patch.tasks) && patch.tasks.length) {
+      html += '<h4>Tasks will be replaced with (' + patch.tasks.length + ')</h4><ul>';
+      patch.tasks.forEach(t => { html += '<li>' + escapeHtml(t.name || 'Untitled task') + '</li>'; });
+      html += '</ul>';
+    }
+    if (Array.isArray(patch.news) && patch.news.length) {
+      html += '<h4>News will be replaced with (' + patch.news.length + ')</h4><ul>';
+      patch.news.forEach(n => { html += '<li>' + escapeHtml(n.title || 'Untitled article') + '</li>'; });
+      html += '</ul>';
+    }
+    if (patch.accentColor) {
+      html += '<h4>Accent color</h4>' + escapeHtml(patch.accentColor) +
+        '<span class="patch-swatch-preview" style="background:' + escapeHtml(patch.accentColor) + '"></span>';
+    }
+    if (!Array.isArray(patch.tasks) && !Array.isArray(patch.news) && !patch.accentColor) {
+      html += '<h4>No recognized changes</h4>This file has no tasks, news, or accentColor fields to apply.';
+    }
+
+    body.innerHTML = html;
+    document.getElementById('patch-preview-overlay').classList.add('active');
+  }
+
+  function cancelPatchPreview() {
+    pendingPatch = null;
+    document.getElementById('patch-preview-overlay').classList.remove('active');
+  }
+
+  async function confirmApplyPatch() {
+    if (!pendingPatch) { cancelPatchPreview(); return; }
+    if (!isAdminUser) {
+      setFileStatus('Only the admin can apply updates.');
+      cancelPatchPreview();
+      return;
+    }
+    const btn = document.getElementById('patch-apply-btn');
+    btn.disabled = true;
+    try {
+      await applyPatch(pendingPatch);
+      const label = pendingPatch.patchVersion ? ('Update ' + pendingPatch.patchVersion + ' applied.') : 'Update applied.';
+      setFileStatus(label);
+    } catch (err) {
+      setFileStatus('Could not apply that update.');
+    } finally {
+      btn.disabled = false;
+      pendingPatch = null;
+      document.getElementById('patch-preview-overlay').classList.remove('active');
+      closePatchEditor();
+    }
+  }
+
+  async function loadPatchHistory() {
+    await dbReady;
+    if (!db) return [];
+    try {
+      const snap = await db.collection('app').doc('patchHistory').get();
+      if (!snap.exists) return [];
+      const data = snap.data();
+      return Array.isArray(data.entries) ? data.entries : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  async function savePatchHistory(entries) {
+    await dbReady;
+    if (!db) return;
+    try {
+      await db.collection('app').doc('patchHistory').set({ entries: entries });
+    } catch (err) {}
+  }
+
+  function renderCurrentState(tasks, news, accentColor) {
+    if (Array.isArray(tasks) && tasks.length) {
+      const list = document.getElementById('task-list');
+      list.innerHTML = '';
+      tasks.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.innerHTML =
+          '<div class="task" onclick="toggleTask(this)">' +
+            '<div class="task-check"></div>' +
+            '<div class="task-text">' + escapeHtml(t.name || 'Untitled task') + '</div>' +
+            '<div class="note-toggle" onclick="event.stopPropagation(); toggleNotepad(this)">&#128221;</div>' +
+          '</div>' +
+          '<div class="task-notepad">' +
+            '<div class="task-question">' + escapeHtml(t.question || 'Any notes on this?') + '</div>' +
+            '<textarea class="task-note-input" placeholder="Write your answer or notes..." oninput="saveTaskNote(this)"></textarea>' +
+          '</div>';
+        list.appendChild(card);
+      });
+    }
+
+    if (Array.isArray(news) && news.length) {
+      const list = document.getElementById('news-list');
+      list.innerHTML = '';
+      news.forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'news-card';
+        card.innerHTML =
+          '<div class="news-meta"><span class="news-tag">' + escapeHtml(n.tag || 'Tech') + '</span><span class="news-time">' + escapeHtml(n.time || '') + '</span></div>' +
+          '<div class="news-title">' + escapeHtml(n.title || '') + '</div>' +
+          '<div class="news-snippet">' + escapeHtml(n.snippet || '') + '</div>';
+        list.appendChild(card);
+      });
+    }
+
+    if (accentColor) {
+      applyAccent(accentColor);
+      localStorage.setItem('madoox-accent', accentColor);
+    }
+
+    updateProgress(false);
+
+    const tag = document.getElementById('version-tag');
+    if (tag) {
+      const v = localStorage.getItem('madoox-patch-version');
+      tag.textContent = 'Madoox Regime · Version 1.0' + (v ? ' (patch ' + v + ')' : '');
+    }
+  }
+
+  async function applyPatch(patch) {
+    const email = localStorage.getItem('madoox-current-user');
+    let history = await loadPatchHistory();
+
+    // Seed the baseline entry the very first time a patch is ever applied,
+    // so there is always something to roll back to.
+    if (!history.length) {
+      history.push({
+        version: '1.0',
+        notes: 'Initial release',
+        appliedAt: new Date().toISOString(),
+        appliedBy: null,
+        tasks: defaultTasksSnapshot(),
+        news: defaultNewsSnapshot(),
+        accentColor: null
+      });
+    }
+
+    const previous = history[history.length - 1];
+    const entry = {
+      version: patch.patchVersion || 'Unversioned',
+      notes: patch.notes || '',
+      appliedAt: new Date().toISOString(),
+      appliedBy: email || null,
+      tasks: Array.isArray(patch.tasks) && patch.tasks.length ? patch.tasks : previous.tasks,
+      news: Array.isArray(patch.news) && patch.news.length ? patch.news : previous.news,
+      accentColor: patch.accentColor || previous.accentColor || null
+    };
+    history.push(entry);
+
+    if (entry.version) localStorage.setItem('madoox-patch-version', entry.version);
+    renderCurrentState(entry.tasks, entry.news, patch.accentColor || null);
+    await savePatchHistory(history);
+  }
+
+  async function openChangelog() {
+    showScreen('changelog');
+    const history = await loadPatchHistory();
+    renderChangelog(history);
+  }
+
+  function closeChangelog() {
+    showScreen('home');
+  }
+
+  function renderChangelog(history) {
+    const list = document.getElementById('changelog-list');
+    const empty = document.getElementById('changelog-empty');
+    list.innerHTML = '';
+
+    if (!history.length) {
+      list.appendChild(empty);
+      return;
+    }
+
+    const ordered = history.slice().reverse(); // newest first
+    ordered.forEach((entry, i) => {
+      const isCurrent = i === 0;
+      const realIndex = history.length - 1 - i;
+      const row = document.createElement('div');
+      row.className = 'changelog-entry' + (isCurrent ? ' current' : '');
+
+      let dateStr = '';
+      try { dateStr = new Date(entry.appliedAt).toLocaleString(); } catch (err) { dateStr = entry.appliedAt || ''; }
+
+      row.innerHTML =
+        (isCurrent ? '<div class="changelog-current-tag">Current</div>' : '') +
+        '<div class="changelog-row"><span class="changelog-version">Version ' + escapeHtml(entry.version || 'Unversioned') + '</span>' +
+        '<span class="changelog-date">' + escapeHtml(dateStr) + '</span></div>' +
+        '<div class="changelog-notes">' + escapeHtml(entry.notes || 'No notes provided for this update.') + '</div>' +
+        (isCurrent ? '' : '<button class="changelog-restore-btn" onclick="restoreHistoryIndex(' + realIndex + ')">Restore this version</button>');
+
+      list.appendChild(row);
+    });
+  }
+
+  async function restoreHistoryIndex(index) {
+    if (!isAdminUser) {
+      setFileStatus('Only the admin can roll back updates.');
+      return;
+    }
+    let history = await loadPatchHistory();
+    if (index < 0 || index >= history.length) return;
+
+    // Restoring means: this becomes current, and everything after it is dropped.
+    history = history.slice(0, index + 1);
+    const entry = history[history.length - 1];
+
+    if (entry.version) localStorage.setItem('madoox-patch-version', entry.version);
+    renderCurrentState(entry.tasks, entry.news, entry.accentColor);
+    await savePatchHistory(history);
+    renderChangelog(history);
+    setFileStatus('Restored version ' + (entry.version || 'Unversioned') + '.');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  // ===== BOT ASSISTANT =====
+  let sampleFn = null;
+  const sampleReady = (async () => {
+    try { sampleFn = await claude.use("sample"); } catch (err) { sampleFn = null; }
+  })();
+
+  let recognition = null;
+  let listening = false;
+  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognitionCtor) {
+    recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('bot-input').value = transcript;
+      sendBotText();
+    };
+    recognition.onerror = () => {
+      setBotStatus('Voice input failed. Try typing instead.');
+      stopListening();
+    };
+    recognition.onend = () => { stopListening(); };
+  }
+
+  function toggleBot() {
+    const panel = document.getElementById('bot-panel');
+    panel.classList.toggle('active');
+    document.getElementById('bot-fab').classList.remove('nudge');
+    if (panel.classList.contains('active')) updateBotChips();
+  }
+
+  function setBotStatus(text) {
+    document.getElementById('bot-status').textContent = text || '';
+  }
+
+  function appendBotMessage(text, who) {
+    const list = document.getElementById('bot-messages');
+    const div = document.createElement('div');
+    div.className = 'bot-msg ' + who;
+    div.textContent = text;
+    list.appendChild(div);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function toggleVoice() {
+    if (!recognition) {
+      setBotStatus('Voice recognition isn\'t supported in this browser — type your command instead.');
+      return;
+    }
+    if (listening) {
+      recognition.stop();
+      return;
+    }
+    try {
+      recognition.start();
+      listening = true;
+      document.getElementById('bot-mic').classList.add('listening');
+      setBotStatus('Listening...');
+    } catch (err) {
+      setBotStatus('Could not start the microphone.');
+    }
+  }
+
+  function stopListening() {
+    listening = false;
+    document.getElementById('bot-mic').classList.remove('listening');
+    setBotStatus('');
+  }
+
+  // ----- Madoox Assistant: replies to users on every page -----
+  const botTurns = [];
+  let botBusy = false;
+
+  function isLoggedIn() { return !!localStorage.getItem('madoox-current-user'); }
+
+  function updateBotChips() {
+    const wrap = document.getElementById('bot-chips');
+    if (!wrap) return;
+    const sets = isLoggedIn()
+      ? ['What can you do?', 'How does my streak work?', 'How do I save my progress?', 'Explain cloud computing']
+      : ['How do I log in?', 'I forgot my password', 'How does fingerprint work?', 'What is Madoox Regime?'];
+    wrap.innerHTML = '';
+    sets.forEach(q => {
+      const btn = document.createElement('button');
+      btn.className = 'bot-chip';
+      btn.textContent = q;
+      btn.onclick = function () {
+        document.getElementById('bot-input').value = q;
+        sendBotText();
+      };
+      wrap.appendChild(btn);
+    });
+  }
+
+  function resetBot() {
+    botTurns.length = 0;
+    const list = document.getElementById('bot-messages');
+    if (list) {
+      list.innerHTML = '';
+      const hello = document.createElement('div');
+      hello.className = 'bot-msg bot';
+      hello.textContent = "Hi, I'm the Madoox Assistant. Ask me how the app works, or any technology question. You can type or tap the mic.";
+      list.appendChild(hello);
+    }
+    const panel = document.getElementById('bot-panel');
+    if (panel) panel.classList.remove('active');
+    setBotStatus('');
+  }
+
+  // Built-in answers about the app itself (work even without Claude access)
+  const BOT_FAQ = [
+    { re: /^\s*(hi|hello|hey|yo|good (morning|afternoon|evening))\b/i,
+      a: () => isLoggedIn()
+        ? 'Hello! Ask me how anything in the app works, tell me to open a page or mark a task done, or ask any technology question.'
+        : 'Hello! Ask me how to log in, sign up or reset your password, or ask any technology question.' },
+    { re: /who\s+(is|was|are)\s+(the\s+|your\s+)?(madoox|founder|creator|owner|developer|author|boss)|who\s+(founded|created|made|built|developed|owns|started|designed)\b|\b(founder|creator)\b|(made|built|created|founded)\s+(you|this bot|the bot)|who(?:'s| is) behind/i,
+      a: () => 'Madoox is the founder of this bot and of the Madoox Regime app.' },
+    { re: /^\s*(who|what)\s+are\s+you\s*[?.!]*\s*$|^\s*(what(?:'s| is)\s+your\s+name|your name)\s*[?.!]*\s*$/i,
+      a: () => "I'm the Madoox Assistant, the in-app helper for Madoox Regime. Madoox is my founder." },
+    { re: /^\s*(help|what can you do|what do you do|commands)\s*[?.!]*\s*$/i,
+      a: () => 'I can:\n- explain how the app works (login, fingerprint, notes, saving, streaks)\n' +
+        (isLoggedIn() ? '- open pages: "open news", "open about", "open home"\n- mark a task done: "mark Read 20 pages done"\n- tell you your streak, or log you out\n' : '- open pages and mark tasks once you are logged in\n') +
+        '- answer general technology questions' },
+    { re: /forgot|reset.*password|lost.*password|can'?t (log ?in|sign ?in)|cannot (log ?in|sign ?in)/i,
+      a: () => 'On the Log In tab, tap "Forgot password?", enter your account email and tap "Send code". This demo cannot send real email, so the 6-digit code is shown right in the app. Enter it with a new password within 10 minutes.' },
+    { re: /(how|where).*(log ?in|sign ?in|sign ?up|register|create.*account)|^\s*(log ?in|sign ?up)\s*\??\s*$/i,
+      a: () => 'Use the Log In / Sign Up tabs on the first screen. New here? Choose Sign Up, enter your name, email and a password, then tap Create Account. After that you pick a technology focus and land on Home.' },
+    { re: /how.*(log ?out|sign ?out)|where.*(log ?out|sign ?out)/i,
+      a: () => 'Tap Log Out in the bottom bar of Home, News or About. You can also type or say "log out" to me.' },
+    { re: /finger|biometric|touch ?id/i,
+      a: () => 'Tap the fingerprint button on the login screen to unlock. Note that in this app the scan is simulated: it does not read a real fingerprint, so treat it as a quick-entry demo rather than real biometric security.' },
+    { re: /note ?pad|notes?\b.*task|task.*notes?|assigned question/i,
+      a: () => 'On Home, tap the note icon at the right of a task. Each task has its own question to answer plus a free-write box. Your notes save automatically.' },
+    { re: /how.*(streak|badge)|streak.*(work|count|reset)|badge/i,
+      a: () => 'Your streak grows by one for each day you complete all of that day\'s tasks, and it shows on Home. Badges unlock at 3, 7, 14 and 30 days in a row.' },
+    { re: /save|import|export|back ?up|download/i,
+      a: () => 'On the Home page, the title bar at the top has Save, Save As and Import. Save downloads your progress as a JSON file; Import restores one you saved earlier. Your browser will ask you to confirm each download.' },
+    { re: /\bnews\b/i,
+      a: () => 'The News tab shows technology headlines, but right now they are sample content, not a live feed.' },
+    { re: /colou?r|theme|appearance|accent/i,
+      a: () => 'Go to the About page and pick an accent color under Appearance. It is remembered on your device and account.' },
+    { re: /admin|patch|rollback|update history/i,
+      a: () => 'Updates are managed by the app admin only. The admin is built in (the first account created) and gets Update and History buttons in the title bar to edit, preview, apply and roll back updates.' },
+    { re: /focus|track|sector/i,
+      a: () => 'The Choose Focus page lists 16 technology tracks. Tap one to select it and read about it; the info icon opens the details without selecting. You can change it later from the focus slot on Home.' },
+    { re: /what is (madoox|this app|the app)|about (the|this) app|who (made|built)/i,
+      a: () => 'Madoox Regime is a daily-discipline app: pick a technology focus, complete your daily tasks to build a streak, write notes, and save your progress to a file.' }
+  ];
+
+  function botFaqAnswer(text) {
+    for (const item of BOT_FAQ) {
+      if (item.re.test(text)) return item.a();
+    }
+    return null;
+  }
+
+  const BOT_RULES = 'You are "Madoox Assistant", the in-app helper for Madoox Regime, a daily-discipline app. ' +
+    'Facts about the app: users sign up or log in; the fingerprint button is a simulated scan, not real biometrics; ' +
+    'after login they pick one of 16 technology tracks; Home has daily tasks with per-task notepads, a streak and badges; ' +
+    'News currently shows sample headlines, not live news; ' +
+    'About has accent colors; the title bar on the Home page has Save, Save As and Import. ' +
+    'You can only open pages, mark tasks done, report the streak and log out when the user types or says those commands; you cannot change settings, accounts or data. ' +
+    'The founder of this bot and of Madoox Regime is Madoox; if asked who founded, created, built or owns the bot or the app, say Madoox. ' +
+    'Never claim to have done something you did not do, and say so plainly if you are not sure about an app detail. ' +
+    'You also answer general technology questions accurately. Reply in plain text (no markdown), in 1-4 short sentences unless asked for more.';
+
+  function botSay(text) { appendBotMessage(text, 'bot'); }
+
+  async function sendBotText() {
+    if (botBusy) return;
+    const input = document.getElementById('bot-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    appendBotMessage(text, 'user');
+
+    botBusy = true;
+    try {
+      if (await runVoiceCommand(text)) return;
+
+      const faq = botFaqAnswer(text);
+      if (faq) { botSay(faq); return; }
+
+      await sampleReady;
+      if (!sampleFn) {
+        botSay('I can answer questions about the app and run commands, but open-ended questions need Claude access, which isn\'t available in this view.');
+        return;
+      }
+
+      setBotStatus('Thinking...');
+      const turns = botTurns.concat([{ role: 'user', content: text }]).slice(-8).map(t => ({ role: t.role, content: t.content }));
+      while (turns.length && turns[0].role !== 'user') turns.shift();
+      turns[0].content = BOT_RULES + '\n\nConversation:\n' + turns[0].content;
+
+      try {
+        const result = await sampleFn(turns, { modelTier: 'quick', cache: false });
+        const reply = (result && result.text ? result.text : '').trim();
+        botSay(reply || 'I don\'t have an answer for that. Try rephrasing it.');
+        botTurns.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
+        if (botTurns.length > 12) botTurns.splice(0, botTurns.length - 12);
+      } catch (err) {
+        const code = err && err.code;
+        if (code === 'not_granted' || code === 'sampling_disabled' || code === 'not_declared') {
+          botSay('I can\'t answer open-ended questions here because Claude access wasn\'t allowed. App questions and commands still work.');
+        } else if (code === 'rate_limited') {
+          botSay('That was too many questions in a row. Wait a moment and ask again.');
+        } else if (code !== 'cancelled') {
+          botSay('I couldn\'t get an answer just now. Try again in a moment.');
+        }
+      } finally {
+        setBotStatus('');
+      }
+    } finally {
+      botBusy = false;
+    }
+  }
+
+  async function runVoiceCommand(raw) {
+    const text = raw.trim().toLowerCase();
+
+    const nav = text.match(/^(?:please\s+)?(?:open|go to|show|take me to)\s+(?:the\s+|my\s+)?(home|news|about|choose focus|focus|tracks?)\b/);
+    if (nav) {
+      if (!isLoggedIn()) { botSay('Please log in first, then I can open pages for you.'); return true; }
+      const map = { home: 'home', news: 'news', about: 'about', 'choose focus': 'tech', focus: 'tech', track: 'tech', tracks: 'tech' };
+      botSay('Opening ' + nav[1] + '.');
+      showScreen(map[nav[1]]);
+      return true;
+    }
+
+    if (/^(?:please\s+)?(?:log|sign)\s?(?:me\s)?out\s*[.!]?\s*$/.test(text)) {
+      if (!isLoggedIn()) { botSay('You are not logged in.'); return true; }
+      botSay('Logging you out.');
+      setTimeout(logOut, 300);
+      return true;
+    }
+
+    if (/^(?:what(?:'s| is)\s+)?(?:my|the|current)\s+streak\b|^(?:show|tell)\b.*\bstreak\b/.test(text)) {
+      if (!isLoggedIn()) { botSay('Log in to see your streak.'); return true; }
+      const streak = document.querySelector('.streak-card .value');
+      botSay('Your current streak is ' + (streak ? streak.textContent : 'not available') + '.');
+      return true;
+    }
+
+    const markMatch = text.match(/^(?:please\s+)?(?:mark|complete|finish|check off)\s+(.+?)(?:\s+(?:as\s+)?done)?$/);
+    if (markMatch) {
+      const target = markMatch[1].trim();
+      let found = null;
+      document.querySelectorAll('#task-list .task').forEach(t => {
+        const name = t.querySelector('.task-text').textContent.toLowerCase();
+        if (name.includes(target) || target.includes(name)) found = t;
+      });
+      if (found) {
+        if (!isLoggedIn()) { botSay('Log in first, then I can mark tasks done.'); return true; }
+        const label = found.querySelector('.task-text').textContent;
+        if (found.classList.contains('done')) botSay('"' + label + '" is already done.');
+        else { toggleTask(found); botSay('Marked "' + label + '" as done.'); }
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // ambient floating particles
+  (function addParticles() {
+    const phone = document.getElementById('phone');
+    const sizes = [6, 10, 14, 8, 12];
+    for (let i = 0; i < 6; i++) {
+      const p = document.createElement('div');
+      const size = sizes[i % sizes.length];
+      p.className = 'particle';
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.random() * 90 + '%';
+      p.style.top = Math.random() * 90 + '%';
+      p.style.animationDelay = (Math.random() * 4) + 's';
+      p.style.animationDuration = (7 + Math.random() * 5) + 's';
+      phone.appendChild(p);
+    }
+  })();
+
+  // ===== BACKEND (persistent db) =====
+  let db = null;
+  let fbAuth = null;
+  const useFirebase = !!(window.firebase && window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && !/^PASTE_/.test(window.FIREBASE_CONFIG.apiKey));
+  const dbReady = (async () => {
+    if (useFirebase) {
+      try {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+        fbAuth = firebase.auth();
+        db = firebase.firestore();
+        return;
+      } catch (err) { db = null; fbAuth = null; }
+    }
+    try { db = await claude.use("db"); } catch (err) { db = null; }
+  })();
+
+  function authErrorText(err) {
+    const c = err && err.code || '';
+    if (c === 'auth/email-already-in-use') return 'An account with this email already exists.';
+    if (c === 'auth/user-not-found' || c === 'auth/invalid-login-credentials' || c === 'auth/invalid-credential' || c === 'auth/wrong-password') return 'Incorrect email or password.';
+    if (c === 'auth/weak-password') return 'Password should be at least 6 characters.';
+    if (c === 'auth/invalid-email') return 'That email address is not valid.';
+    if (c === 'auth/too-many-requests') return 'Too many attempts. Wait a moment and try again.';
+    if (c === 'auth/network-request-failed') return 'No internet connection.';
+    return 'Something went wrong. Please try again.';
+  }
+
+  function setMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text || '';
+    el.className = 'auth-msg' + (type ? ' ' + type : '');
+  }
+
+  async function handleSignup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim().toLowerCase();
+    const password = document.getElementById('signup-password').value;
+    const btn = document.getElementById('signup-btn');
+
+    setMsg('signup-msg', '', '');
+    if (!name || !email || !password) {
+      setMsg('signup-msg', 'Please fill in every field.', 'error');
+      return;
+    }
+    if (password.length < (useFirebase ? 6 : 4)) {
+      setMsg('signup-msg', 'Password should be at least ' + (useFirebase ? 6 : 4) + ' characters.', 'error');
+      return;
+    }
+
+    await dbReady;
+    if (!db) {
+      localStorage.setItem('madoox-current-user', email);
+      localStorage.setItem('madoox-current-name', name);
+      enterApp();
+      return;
+    }
+
+    btn.disabled = true;
+    setMsg('signup-msg', 'Creating account...', '');
+    try {
+      const ref = db.collection('users').doc(email);
+      if (fbAuth) {
+        await fbAuth.createUserWithEmailAndPassword(email, password);
+        await ref.set({ name: name, email: email, createdAt: new Date().toISOString() });
+      } else {
+        const snap = await ref.get();
+        if (snap.exists) {
+          setMsg('signup-msg', 'An account with this email already exists.', 'error');
+          btn.disabled = false;
+          return;
+        }
+        await ref.set({ name: name, email: email, password: password, createdAt: new Date().toISOString() });
+      }
+      localStorage.setItem('madoox-current-user', email);
+      localStorage.setItem('madoox-current-name', name);
+      setMsg('signup-msg', 'Account created!', 'success');
+      setTimeout(enterApp, 350);
+    } catch (err) {
+      setMsg('signup-msg', fbAuth ? authErrorText(err) : 'Something went wrong. Please try again.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('login-btn');
+
+    setMsg('login-msg', '', '');
+    if (!email || !password) {
+      setMsg('login-msg', 'Enter your email and password.', 'error');
+      return;
+    }
+
+    await dbReady;
+    if (!db) {
+      localStorage.setItem('madoox-current-user', email);
+      enterApp();
+      return;
+    }
+
+    btn.disabled = true;
+    setMsg('login-msg', 'Checking credentials...', '');
+    try {
+      const ref = db.collection('users').doc(email);
+      let data;
+      if (fbAuth) {
+        await fbAuth.signInWithEmailAndPassword(email, password);
+        const snap = await ref.get();
+        data = snap.exists ? snap.data() : {};
+      } else {
+        const snap = await ref.get();
+        if (!snap.exists) {
+          setMsg('login-msg', 'No account found with that email.', 'error');
+          btn.disabled = false;
+          return;
+        }
+        data = snap.data();
+        if (data.password !== password) {
+          setMsg('login-msg', 'Incorrect password.', 'error');
+          btn.disabled = false;
+          return;
+        }
+      }
+      localStorage.setItem('madoox-current-user', email);
+      localStorage.setItem('madoox-current-name', data.name || '');
+      setMsg('login-msg', 'Welcome back!', 'success');
+      setTimeout(enterApp, 250);
+    } catch (err) {
+      setMsg('login-msg', fbAuth ? authErrorText(err) : 'Something went wrong. Please try again.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ===== FORGOT PASSWORD FLOW =====
+  function openForgot(evt) {
+    if (evt) evt.preventDefault();
+    document.getElementById('screen-auth').classList.add('forgot-active');
+    document.getElementById('forgot-panel').classList.add('active');
+    document.getElementById('forgot-step-request').classList.add('active');
+    document.getElementById('forgot-step-verify').classList.remove('active');
+    document.getElementById('forgot-email').value = document.getElementById('login-email').value || '';
+    setMsg('forgot-request-msg', '', '');
+    setMsg('forgot-verify-msg', '', '');
+  }
+
+  function closeForgot() {
+    document.getElementById('screen-auth').classList.remove('forgot-active');
+    document.getElementById('forgot-panel').classList.remove('active');
+    document.getElementById('code-banner').textContent = '';
+    document.getElementById('forgot-code').value = '';
+    document.getElementById('forgot-new-password').value = '';
+  }
+
+  async function sendResetCode() {
+    const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+    const btn = document.getElementById('forgot-send-btn');
+    setMsg('forgot-request-msg', '', '');
+
+    if (!email) {
+      setMsg('forgot-request-msg', 'Enter the email on your account.', 'error');
+      return;
+    }
+
+    await dbReady;
+    if (!db) {
+      setMsg('forgot-request-msg', 'Password reset needs the backend, which is unavailable right now.', 'error');
+      return;
+    }
+
+    if (fbAuth) {
+      btn.disabled = true;
+      setMsg('forgot-request-msg', 'Sending email...', '');
+      try {
+        await fbAuth.sendPasswordResetEmail(email);
+        setMsg('forgot-request-msg', 'If an account exists for that email, a reset link has been sent. Check your inbox and spam folder.', 'success');
+      } catch (err) {
+        setMsg('forgot-request-msg', authErrorText(err), 'error');
+      } finally {
+        btn.disabled = false;
+      }
+      return;
+    }
+
+    btn.disabled = true;
+    setMsg('forgot-request-msg', 'Looking up account...', '');
+    try {
+      const ref = db.collection('users').doc(email);
+      const snap = await ref.get();
+      if (!snap.exists) {
+        setMsg('forgot-request-msg', 'No account found with that email.', 'error');
+        btn.disabled = false;
+        return;
+      }
+
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+      await ref.update({ resetCode: code, resetCodeExpiresAt: expiresAt });
+
+      // NOTE: this page cannot send real email (no email capability is
+      // available to a published artifact), so the code that a real
+      // email would deliver is shown here instead, clearly labeled.
+      document.getElementById('code-banner').innerHTML =
+        'This demo can\'t send real email, so here is the code that would have been emailed to <strong>' + email + '</strong>:<br><strong>' + code + '</strong><br>It expires in 10 minutes.';
+
+      document.getElementById('forgot-step-request').classList.remove('active');
+      document.getElementById('forgot-step-verify').classList.add('active');
+    } catch (err) {
+      setMsg('forgot-request-msg', 'Something went wrong. Please try again.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function verifyResetCode() {
+    const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+    const code = document.getElementById('forgot-code').value.trim();
+    const newPassword = document.getElementById('forgot-new-password').value;
+    const btn = document.getElementById('forgot-verify-btn');
+
+    setMsg('forgot-verify-msg', '', '');
+    if (!code || !newPassword) {
+      setMsg('forgot-verify-msg', 'Enter the code and a new password.', 'error');
+      return;
+    }
+    if (newPassword.length < 4) {
+      setMsg('forgot-verify-msg', 'Password should be at least 4 characters.', 'error');
+      return;
+    }
+
+    await dbReady;
+    if (!db) return;
+
+    btn.disabled = true;
+    try {
+      const ref = db.collection('users').doc(email);
+      const snap = await ref.get();
+      if (!snap.exists) {
+        setMsg('forgot-verify-msg', 'Account no longer found.', 'error');
+        btn.disabled = false;
+        return;
+      }
+      const data = snap.data();
+      if (!data.resetCode || data.resetCode !== code) {
+        setMsg('forgot-verify-msg', 'Incorrect code.', 'error');
+        btn.disabled = false;
+        return;
+      }
+      if (!data.resetCodeExpiresAt || Date.now() > data.resetCodeExpiresAt) {
+        setMsg('forgot-verify-msg', 'That code has expired. Request a new one.', 'error');
+        btn.disabled = false;
+        return;
+      }
+
+      await ref.update({ password: newPassword, resetCode: null, resetCodeExpiresAt: null });
+      setMsg('forgot-verify-msg', 'Password reset. You can log in now.', 'success');
+      setTimeout(() => {
+        closeForgot();
+        document.getElementById('login-email').value = email;
+        document.getElementById('login-password').value = '';
+        showForm('login');
+      }, 900);
+    } catch (err) {
+      setMsg('forgot-verify-msg', 'Something went wrong. Please try again.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showForm(which) {
+    const loginTab = document.getElementById('tab-login');
+    const signupTab = document.getElementById('tab-signup');
+    const loginForm = document.getElementById('form-login');
+    const signupForm = document.getElementById('form-signup');
+    const switchLine = document.getElementById('switch-line');
+
+    if (which === 'login') {
+      loginTab.classList.add('active');
+      signupTab.classList.remove('active');
+      loginForm.classList.add('active');
+      signupForm.classList.remove('active');
+      switchLine.innerHTML = 'New to Madoox Regime? <a onclick="showForm(\'signup\')">Sign up</a>';
+    } else {
+      signupTab.classList.add('active');
+      loginTab.classList.remove('active');
+      signupForm.classList.add('active');
+      loginForm.classList.remove('active');
+      switchLine.innerHTML = 'Already have an account? <a onclick="showForm(\'login\')">Log in</a>';
+    }
+  }
+
+  function scanFingerprint() {
+    const btn = document.getElementById('fingerprint-btn');
+    const label = document.getElementById('fingerprint-label');
+    if (btn.classList.contains('scanning') || btn.classList.contains('success')) return;
+
+    btn.classList.add('scanning');
+    label.textContent = 'Scanning...';
+
+    setTimeout(() => {
+      btn.classList.remove('scanning');
+      btn.classList.add('success');
+      label.textContent = 'Fingerprint recognized';
+      if (!localStorage.getItem('madoox-current-user')) {
+        localStorage.setItem('madoox-current-user', 'fingerprint-user@madoox.app');
+      }
+      setTimeout(enterApp, 500);
+    }, 1400);
+  }
+
+  async function enterApp() {
+    await refreshAdminStatus();
+    await prepareTechScreen();
+    showScreen('tech');
+  }
+
+  async function prepareTechScreen() {
+    document.querySelectorAll('.tech-option').forEach(o => o.classList.remove('selected'));
+    const email = localStorage.getItem('madoox-current-user');
+    await dbReady;
+    if (!db || !email) return;
+    try {
+      const snap = await db.collection('users').doc(email).get();
+      const data = snap.exists ? snap.data() : null;
+      const focus = data ? data.focus : null;
+      if (focus) {
+        document.querySelectorAll('.tech-option').forEach(o => {
+          if (o.querySelector('.tech-text').textContent === focus) o.classList.add('selected');
+        });
+      }
+      if (data && data.accentColor && !localStorage.getItem('madoox-accent')) {
+        applyAccent(data.accentColor);
+        localStorage.setItem('madoox-accent', data.accentColor);
+      }
+    } catch (err) {}
+  }
+
+  // ===== APPEARANCE (accent color) =====
+  function applyAccent(color) {
+    document.documentElement.style.setProperty('--gold', color);
+    document.querySelectorAll('.theme-swatch').forEach(s => {
+      s.classList.toggle('selected', s.getAttribute('data-color') === color);
+    });
+  }
+
+  async function chooseAccent(el) {
+    const color = el.getAttribute('data-color');
+    applyAccent(color);
+    localStorage.setItem('madoox-accent', color);
+
+    const email = localStorage.getItem('madoox-current-user');
+    await dbReady;
+    if (db && email) {
+      try {
+        await db.collection('users').doc(email).update({ accentColor: color });
+      } catch (err) {}
+    }
+  }
+
+  function restoreAccentFromStorage() {
+    const saved = localStorage.getItem('madoox-accent');
+    if (saved) applyAccent(saved);
+  }
+  restoreAccentFromStorage();
+
+  (async function restoreAppPatch() {
+    await dbReady;
+    if (!db) return;
+    try {
+      const snap = await db.collection('app').doc('patchHistory').get();
+      if (!snap.exists) return;
+      const data = snap.data();
+      const history = Array.isArray(data.entries) ? data.entries : [];
+      if (!history.length) return;
+      const entry = history[history.length - 1];
+
+      if (entry.version) {
+        localStorage.setItem('madoox-patch-version', entry.version);
+        const tag = document.getElementById('version-tag');
+        if (tag) tag.textContent = 'Madoox Regime · Version 1.0 (patch ' + entry.version + ')';
+      }
+      if (Array.isArray(entry.tasks) && entry.tasks.length) {
+        const list = document.getElementById('task-list');
+        if (list) {
+          list.innerHTML = '';
+          entry.tasks.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.innerHTML =
+              '<div class="task" onclick="toggleTask(this)">' +
+                '<div class="task-check"></div>' +
+                '<div class="task-text">' + escapeHtml(t.name || 'Untitled task') + '</div>' +
+                '<div class="note-toggle" onclick="event.stopPropagation(); toggleNotepad(this)">&#128221;</div>' +
+              '</div>' +
+              '<div class="task-notepad">' +
+                '<div class="task-question">' + escapeHtml(t.question || 'Any notes on this?') + '</div>' +
+                '<textarea class="task-note-input" placeholder="Write your answer or notes..." oninput="saveTaskNote(this)"></textarea>' +
+              '</div>';
+            list.appendChild(card);
+          });
+        }
+      }
+      if (Array.isArray(entry.news) && entry.news.length) {
+        const list = document.getElementById('news-list');
+        if (list) {
+          list.innerHTML = '';
+          entry.news.forEach(n => {
+            const card = document.createElement('div');
+            card.className = 'news-card';
+            card.innerHTML =
+              '<div class="news-meta"><span class="news-tag">' + escapeHtml(n.tag || 'Tech') + '</span><span class="news-time">' + escapeHtml(n.time || '') + '</span></div>' +
+              '<div class="news-title">' + escapeHtml(n.title || '') + '</div>' +
+              '<div class="news-snippet">' + escapeHtml(n.snippet || '') + '</div>';
+            list.appendChild(card);
+          });
+        }
+      }
+    } catch (err) {}
+  })();
+
+  function updateFocusSlot(text, iconHtml) {
+    const valueEl = document.getElementById('focus-value');
+    const iconEl = document.getElementById('focus-icon');
+    if (valueEl) valueEl.textContent = text || 'Not set yet';
+    if (iconEl && iconHtml) iconEl.innerHTML = iconHtml;
+  }
+
+  async function selectTech(el) {
+    document.querySelectorAll('.tech-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+
+    // update the stored focus slot immediately, not just on Continue
+    const email = localStorage.getItem('madoox-current-user');
+    const focus = el.querySelector('.tech-text').textContent;
+    const iconHtml = el.querySelector('.tech-icon').innerHTML;
+    updateFocusSlot(focus, iconHtml);
+    showTechDetail(focus);
+    await dbReady;
+    if (db && email) {
+      try {
+        await db.collection('users').doc(email).update({ focus: focus });
+      } catch (err) {}
+    }
+  }
+
+  async function confirmTech() {
+    const selectedEl = document.querySelector('.tech-option.selected .tech-text');
+    const email = localStorage.getItem('madoox-current-user');
+
+    if (db && email) {
+      try {
+        if (selectedEl) {
+          await db.collection('users').doc(email).update({ focus: selectedEl.textContent });
+        }
+        const snap = await db.collection('users').doc(email).get();
+        if (snap.exists) {
+          const data = snap.data();
+          const greetingEl = document.querySelector('#screen-home .greeting');
+          if (greetingEl && data.name) {
+            greetingEl.innerHTML = 'Welcome back, ' + data.name + '<span>Ready for today\'s regime</span>';
+          }
+          const avatarEl = document.querySelector('#screen-home .avatar');
+          if (avatarEl && data.name) avatarEl.textContent = data.name.charAt(0).toUpperCase();
+          if (data.focus) {
+            const matchingOption = Array.from(document.querySelectorAll('.tech-option')).find(
+              o => o.querySelector('.tech-text').textContent === data.focus
+            );
+            updateFocusSlot(data.focus, matchingOption ? matchingOption.querySelector('.tech-icon').innerHTML : null);
+          }
+        }
+      } catch (err) {}
+      await restoreTasks(email);
+      await loadStreak();
+    }
+    showScreen('home');
+  }
+
+  async function restoreTasks(email) {
+    if (!db || !email) return;
+    try {
+      const snap = await db.collection('users').doc(email).collection('tasks').get();
+      const dataMap = {};
+      snap.docs.forEach(d => { dataMap[d.id] = d.data(); });
+      document.querySelectorAll('#task-list .task-card').forEach(card => {
+        const el = card.querySelector('.task');
+        const name = el.querySelector('.task-text').textContent;
+        const saved = dataMap[name];
+        const done = !!(saved && saved.done);
+        el.classList.toggle('done', done);
+        el.querySelector('.task-check').textContent = done ? '\u2713' : '';
+        const noteInput = card.querySelector('.task-note-input');
+        if (noteInput) noteInput.value = (saved && saved.note) || '';
+      });
+    } catch (err) {}
+  }
+
+  function logOut() {
+    completedDays = [];
+    resetBot();
+    logCache = {};
+    logMood = 0;
+    const btn = document.getElementById('fingerprint-btn');
+    const label = document.getElementById('fingerprint-label');
+    btn.classList.remove('success', 'scanning');
+    label.textContent = 'Tap to scan fingerprint';
+    document.querySelectorAll('.tech-option').forEach(o => o.classList.remove('selected'));
+    profilePhoto = ''; applyPhoto();
+    try { if (fbAuth) fbAuth.signOut(); } catch (e) {}
+    localStorage.removeItem('madoox-current-user');
+    localStorage.removeItem('madoox-current-name');
+    setMsg('login-msg', '', '');
+    setMsg('signup-msg', '', '');
+    showScreen('auth');
+  }
+
+  const pageOrder = ['auth', 'tech', 'home', 'about', 'news'];
+  let currentPageIndex = 0;
+
+  function prevPage() {
+    currentPageIndex = (currentPageIndex - 1 + pageOrder.length) % pageOrder.length;
+    showScreen(pageOrder[currentPageIndex]);
+  }
+
+  function nextPage() {
+    currentPageIndex = (currentPageIndex + 1) % pageOrder.length;
+    showScreen(pageOrder[currentPageIndex]);
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+
+    const idx = pageOrder.indexOf(name);
+    if (idx !== -1) currentPageIndex = idx;
+
+    const showTitleBar = name === 'home';
+    document.querySelector('.app-shell').classList.toggle('titlebar-visible', showTitleBar);
+    if (!showTitleBar) {
+      closeSaveAs();
+      setFileStatus('');
+    }
+
+    document.getElementById('phone').classList.toggle('hide-page-nav', name === 'auth');
+    if (name !== 'tech') closeTechDetail();
+    if (name !== 'auth') refreshAdminStatus();
+    if (name === 'home') updateGreeting();
+    if (name === 'home' || name === 'profile') loadPhoto();
+    if (name === 'profile') renderProfile();
+    updateBotChips();
+  }
+
+  async function upsertTaskDoc(email, name, patch) {
+    if (!db || !email) return;
+    try {
+      const ref = db.collection('users').doc(email).collection('tasks').doc(name);
+      const snap = await ref.get();
+      const current = snap.exists ? snap.data() : {};
+      await ref.set(Object.assign({}, current, patch));
+    } catch (err) {}
+  }
+
+  // ===== DAILY LOG: record data for each day =====
+  let logMood = 0;
+  let logCache = {}; // date -> entry
+
+  function setMood(n) {
+    logMood = n;
+    document.querySelectorAll('#mood-row .mood-btn').forEach(b => {
+      b.classList.toggle('selected', Number(b.getAttribute('data-mood')) === n);
+    });
+  }
+
+  function setLogMsg(text, type) {
+    const el = document.getElementById('log-msg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'auth-msg' + (type ? ' ' + type : '');
+  }
+
+  function shiftLogDate(delta) {
+    const input = document.getElementById('log-date');
+    const parts = (input.value || todayKey()).split('-').map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2] + delta);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    if (key > todayKey()) return; // no logging future days
+    input.value = key;
+    loadLogForDate();
+  }
+
+  function fillLogForm(entry) {
+    setMood(entry && entry.mood ? entry.mood : 0);
+    document.getElementById('log-hours').value = entry && entry.hours != null ? entry.hours : '';
+    document.getElementById('log-learned').value = entry && entry.learned ? entry.learned : '';
+    document.getElementById('log-notes').value = entry && entry.notes ? entry.notes : '';
+  }
+
+  async function loadLogForDate() {
+    const input = document.getElementById('log-date');
+    if (!input.value) input.value = todayKey();
+    if (input.value > todayKey()) input.value = todayKey();
+    setLogMsg('', '');
+    const date = input.value;
+    const email = localStorage.getItem('madoox-current-user');
+    await dbReady;
+    let entry = logCache[date] || null;
+    if (!entry && db && email) {
+      try {
+        const snap = await db.collection('users').doc(email).collection('logs').doc(date).get();
+        if (snap.exists) { entry = snap.data(); logCache[date] = entry; }
+      } catch (err) {}
+    }
+    // ignore a stale response if the user already moved to another date
+    if (document.getElementById('log-date').value !== date) return;
+    fillLogForm(entry);
+  }
+
+  async function saveDailyLog() {
+    const date = document.getElementById('log-date').value || todayKey();
+    const email = localStorage.getItem('madoox-current-user');
+    const hoursRaw = document.getElementById('log-hours').value;
+    const entry = {
+      date: date,
+      mood: logMood || null,
+      hours: hoursRaw === '' ? null : Math.max(0, Math.min(24, Number(hoursRaw))),
+      learned: document.getElementById('log-learned').value.trim(),
+      notes: document.getElementById('log-notes').value.trim(),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (!entry.mood && entry.hours == null && !entry.learned && !entry.notes) {
+      setLogMsg('Add at least one detail before saving.', 'error');
+      return;
+    }
+    if (!email) {
+      setLogMsg('Log in to save entries.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('log-save-btn');
+    btn.disabled = true;
+    setLogMsg('Saving...', '');
+    await dbReady;
+    if (!db) {
+      setLogMsg('Saving needs the backend, which is unavailable right now.', 'error');
+      btn.disabled = false;
+      return;
+    }
+    try {
+      await db.collection('users').doc(email).collection('logs').doc(date).set(entry);
+      logCache[date] = entry;
+      setLogMsg('Entry saved for ' + date + '.', 'success');
+      renderLogHistory();
+    } catch (err) {
+      setLogMsg('Could not save the entry. Try again.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  const MOOD_FACES = { 1: '\u{1F622}', 2: '\u{1F610}', 3: '\u{1F642}', 4: '\u{1F604}', 5: '\u{1F929}' };
+
+  async function renderLogHistory() {
+    const wrap = document.getElementById('log-history');
+    if (!wrap) return;
+    const email = localStorage.getItem('madoox-current-user');
+    await dbReady;
+    let entries = [];
+    if (db && email) {
+      try {
+        const snap = await db.collection('users').doc(email).collection('logs').get();
+        entries = snap.docs.map(d => d.data()).filter(e => e && e.date);
+        entries.forEach(e => { logCache[e.date] = e; });
+      } catch (err) {}
+    }
+    entries.sort((a, b) => (a.date < b.date ? 1 : -1));
+    entries = entries.slice(0, 7);
+
+    if (!entries.length) {
+      wrap.innerHTML = '<div class="changelog-empty">No entries yet.</div>';
+      return;
+    }
+    wrap.innerHTML = '';
+    entries.forEach(e => {
+      const row = document.createElement('div');
+      row.className = 'log-entry';
+      const meta = [];
+      if (e.hours != null) meta.push(e.hours + ' h focused');
+      const snippet = e.learned || e.notes || '';
+      row.innerHTML =
+        '<div class="log-entry-head"><span>' + escapeHtml(e.date) + '</span><span>' + (e.mood ? MOOD_FACES[e.mood] : '') + '</span></div>' +
+        (meta.length ? '<div class="log-entry-meta">' + escapeHtml(meta.join(' · ')) + '</div>' : '') +
+        (snippet ? '<div class="log-entry-snippet">' + escapeHtml(snippet.length > 90 ? snippet.slice(0, 90) + '...' : snippet) + '</div>' : '');
+      row.onclick = function () {
+        document.getElementById('log-date').value = e.date;
+        fillLogForm(e);
+        setLogMsg('', '');
+      };
+      wrap.appendChild(row);
+    });
+  }
+
+  function initDailyLog() {
+    const input = document.getElementById('log-date');
+    if (!input) return;
+    input.max = todayKey();
+    if (!input.value) input.value = todayKey();
+    loadLogForDate();
+    renderLogHistory();
+  }
+
+  // ===== PROGRESS, STREAK & BADGES =====
+  let completedDays = [];
+  const BADGES = [3, 7, 14, 30];
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function dayKeyOffset(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function computeStreak(days) {
+    const set = new Set(days);
+    let offset = set.has(todayKey()) ? 0 : 1; // today may not be finished yet
+    let streak = 0;
+    while (set.has(dayKeyOffset(offset))) { streak++; offset++; }
+    return streak;
+  }
+
+  function computeLongestStreak(days) {
+    if (!days.length) return 0;
+    const sorted = days.slice().sort();
+    let longest = 1, run = 1;
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i - 1]);
+      const cur = new Date(sorted[i]);
+      const diff = Math.round((cur - prev) / 86400000);
+      run = diff === 1 ? run + 1 : 1;
+      if (run > longest) longest = run;
+    }
+    return longest;
+  }
+
+  function renderDashboard() {
+    const set = new Set(completedDays);
+    const current = computeStreak(completedDays);
+    const longest = computeLongestStreak(completedDays);
+
+    let weekDone = 0;
+    const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const chart = document.getElementById('week-chart');
+    if (chart) {
+      chart.innerHTML = '';
+      for (let offset = 6; offset >= 0; offset--) {
+        const key = dayKeyOffset(offset);
+        const done = set.has(key);
+        if (done) weekDone++;
+        const d = new Date();
+        d.setDate(d.getDate() - offset);
+        const col = document.createElement('div');
+        col.className = 'week-bar-col';
+        col.innerHTML =
+          '<div class="week-bar' + (done ? ' done' : '') + '" style="height:' + (done ? '100%' : '14%') + '"></div>' +
+          '<div class="week-bar-label">' + dayLabels[d.getDay()] + '</div>';
+        chart.appendChild(col);
+      }
+    }
+
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    setText('stat-current-streak', String(current));
+    setText('stat-longest-streak', String(longest));
+    setText('stat-total-days', String(completedDays.length));
+    setText('stat-week-rate', Math.round(weekDone / 7 * 100) + '%');
+
+    const badgeWrap = document.getElementById('dashboard-badges');
+    if (badgeWrap) {
+      badgeWrap.innerHTML = BADGES.map(n =>
+        '<span class="badge' + (current >= n ? ' earned' : '') + '">' + n + '-day</span>').join('');
+    }
+
+    const focusEl = document.querySelector('.tech-option.selected .tech-text');
+    const focusBlock = document.getElementById('dashboard-focus-block');
+    const focusText = document.getElementById('dashboard-focus-text');
+    if (focusEl && focusBlock && focusText) {
+      focusBlock.style.display = 'block';
+      focusText.textContent = focusEl.textContent;
+    } else if (focusBlock) {
+      focusBlock.style.display = 'none';
+    }
+  }
+
+  async function loadStreak() {
+    const email = localStorage.getItem('madoox-current-user');
+    completedDays = [];
+    await dbReady;
+    if (db && email) {
+      try {
+        const snap = await db.collection('users').doc(email).get();
+        if (snap.exists && Array.isArray(snap.data().completedDays)) completedDays = snap.data().completedDays;
+      } catch (err) {}
+    }
+    updateProgress(false);
+  }
+
+  async function updateProgress(persist) {
+    const tasks = document.querySelectorAll('#task-list .task');
+    const done = document.querySelectorAll('#task-list .task.done').length;
+    const total = tasks.length;
+
+    const bar = document.getElementById('progress-bar');
+    const label = document.getElementById('progress-label');
+    if (bar) bar.style.width = (total ? Math.round(done / total * 100) : 0) + '%';
+    if (label) label.textContent = done + ' of ' + total + ' tasks done today';
+
+    const key = todayKey();
+    const allDone = total > 0 && done === total;
+    const has = completedDays.includes(key);
+    let changed = false;
+    if (allDone && !has) { completedDays.push(key); changed = true; }
+    if (!allDone && has) { completedDays = completedDays.filter(d => d !== key); changed = true; }
+
+    const streak = computeStreak(completedDays);
+    const val = document.getElementById('streak-value');
+    if (val) val.textContent = streak + (streak === 1 ? ' day' : ' days');
+
+    const badges = document.getElementById('badges');
+    if (badges) {
+      badges.innerHTML = BADGES.map(n =>
+        '<span class="badge' + (streak >= n ? ' earned' : '') + '">' + n + '-day</span>').join('');
+    }
+
+    if (persist && changed) {
+      const email = localStorage.getItem('madoox-current-user');
+      await dbReady;
+      if (db && email) {
+        try { await db.collection('users').doc(email).update({ completedDays: completedDays }); } catch (err) {}
+      }
+    }
+  }
+
+  async function toggleTask(el) {
+    el.classList.toggle('done');
+    const check = el.querySelector('.task-check');
+    check.textContent = el.classList.contains('done') ? '\u2713' : '';
+    updateProgress(true);
+
+    const email = localStorage.getItem('madoox-current-user');
+    const name = el.querySelector('.task-text').textContent;
+    await dbReady;
+    await upsertTaskDoc(email, name, { done: el.classList.contains('done') });
+  }
+
+  function toggleNotepad(iconEl) {
+    const card = iconEl.closest('.task-card');
+    const pad = card.querySelector('.task-notepad');
+    const nowOpen = pad.classList.toggle('open');
+    card.classList.toggle('notes-open', nowOpen);
+  }
+
+  let noteSaveTimers = {};
+  function saveTaskNote(textareaEl) {
+    const card = textareaEl.closest('.task-card');
+    const name = card.querySelector('.task-text').textContent;
+    const value = textareaEl.value;
+
+    clearTimeout(noteSaveTimers[name]);
+    noteSaveTimers[name] = setTimeout(async () => {
+      const email = localStorage.getItem('madoox-current-user');
+      await dbReady;
+      await upsertTaskDoc(email, name, { note: value });
+    }, 600);
+  }
+
+  // ===== Focus timer & daily quote =====
+  const QUOTES = ['Discipline is choosing what you want most over what you want now.','Small steps, taken daily, build big results.','Do the work. Let the streak speak.','Consistency beats intensity.','You do not rise to your goals, you fall to your systems.','Start where you are. Use what you have.','One focused hour beats a distracted day.'];
+  let timerSecs = 25 * 60, timerTotal = 25 * 60, timerId = null;
+  function renderTimer() {
+    const m = Math.floor(timerSecs / 60), r = timerSecs % 60;
+    const el = document.getElementById('timer-time');
+    if (el) el.textContent = String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+  }
+  function setTimerMinutes(min, btn) {
+    if (timerId) return;
+    timerTotal = timerSecs = min * 60;
+    document.querySelectorAll('#timer-presets .title-btn').forEach(b => b.classList.toggle('sel', b === btn));
+    renderTimer();
+  }
+  function toggleTimer() {
+    const card = document.getElementById('timer-card'), btn = document.getElementById('timer-start');
+    if (timerId) { clearInterval(timerId); timerId = null; card.classList.remove('running'); btn.textContent = 'Resume'; return; }
+    if (timerSecs <= 0) timerSecs = timerTotal;
+    card.classList.add('running'); btn.textContent = 'Pause';
+    timerId = setInterval(() => {
+      timerSecs--; renderTimer();
+      if (timerSecs <= 0) {
+        clearInterval(timerId); timerId = null;
+        card.classList.remove('running'); btn.textContent = 'Start';
+        document.getElementById('timer-time').textContent = 'Done!';
+        try { if (navigator.vibrate) navigator.vibrate(300); } catch (e) {}
+      }
+    }, 1000);
+  }
+  function resetTimer() {
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    document.getElementById('timer-card').classList.remove('running');
+    document.getElementById('timer-start').textContent = 'Start';
+    timerSecs = timerTotal; renderTimer();
+  }
+  (function () {
+    const q = document.getElementById('daily-quote');
+    if (q) q.textContent = '"' + QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length] + '"';
+  })();
+
+  // ===== Functional salutation =====
+  function updateGreeting() {
+    let name = '';
+    try { name = (localStorage.getItem('madoox-current-name') || '').trim(); } catch (e) {}
+    if (!name) {
+      let email = '';
+      try { email = localStorage.getItem('madoox-current-user') || ''; } catch (e) {}
+      if (email && !/^fingerprint-user@/.test(email)) name = email.split('@')[0];
+    }
+    const first = name.split(/\s+/)[0];
+    const h = new Date().getHours();
+    const part = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    const g = document.getElementById('greeting-text');
+    if (g) g.textContent = first ? part + ', ' + first : part;
+    const a = document.getElementById('home-avatar');
+    if (a) a.textContent = first ? first.charAt(0).toUpperCase() : 'M';
+  }
+
+  // ===== Profile picture =====
+  let profilePhoto = '';
+  function photoKey() { return 'madoox-photo:' + (localStorage.getItem('madoox-current-user') || ''); }
+  function profileMsg(t) { const m = document.getElementById('profile-msg'); if (m) m.textContent = t || ''; }
+  function applyPhoto() {
+    ['home-avatar', 'profile-photo'].forEach(id => {
+      const el = document.getElementById(id); if (!el) return;
+      if (profilePhoto) { el.style.backgroundImage = 'url(' + profilePhoto + ')'; el.classList.add('has-photo'); }
+      else { el.style.backgroundImage = ''; el.classList.remove('has-photo'); }
+    });
+  }
+  async function loadPhoto() {
+    profilePhoto = '';
+    try { profilePhoto = localStorage.getItem(photoKey()) || ''; } catch (e) {}
+    applyPhoto();
+    const email = (localStorage.getItem('madoox-current-user') || '').toLowerCase();
+    if (!profilePhoto && email) {
+      await dbReady;
+      if (db) {
+        try {
+          const snap = await db.collection('users').doc(email).get();
+          if (snap.exists && snap.data().photo) { profilePhoto = snap.data().photo; applyPhoto(); }
+        } catch (e) {}
+      }
+    }
+  }
+  async function savePhoto(dataUrl) {
+    profilePhoto = dataUrl; applyPhoto();
+    try { if (dataUrl) localStorage.setItem(photoKey(), dataUrl); else localStorage.removeItem(photoKey()); } catch (e) {}
+    const email = (localStorage.getItem('madoox-current-user') || '').toLowerCase();
+    await dbReady;
+    if (db && email) { try { await db.collection('users').doc(email).update({ photo: dataUrl }); } catch (e) {} }
+  }
+  function handlePhotoFile(event) {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { profileMsg('Please choose an image file.'); return; }
+    const reader = new FileReader();
+    reader.onerror = () => profileMsg('Could not read that file.');
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => profileMsg('That image could not be opened.');
+      img.onload = async () => {
+        const size = 256, c = document.createElement('canvas');
+        c.width = c.height = size;
+        const side = Math.min(img.width, img.height);
+        c.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+        await savePhoto(c.toDataURL('image/jpeg', 0.85));
+        profileMsg('Profile picture updated.');
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  async function removePhoto() { await savePhoto(''); profileMsg('Picture removed.'); }
+  function renderProfile() {
+    const name = (localStorage.getItem('madoox-current-name') || '').trim();
+    const email = localStorage.getItem('madoox-current-user') || '';
+    const shown = /^fingerprint-user@/.test(email) ? '' : email;
+    document.getElementById('profile-name').textContent = name || 'Madoox member';
+    document.getElementById('profile-email').textContent = shown;
+    const ph = document.getElementById('profile-photo');
+    if (ph) ph.textContent = (name || 'M').charAt(0).toUpperCase();
+    profileMsg('');
+    applyPhoto();
+  }
+</script>
+
+</body>
+</html>

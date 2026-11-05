@@ -1,0 +1,15 @@
+MADOOX REGIME - ALL FILES
+
+madoox-regime.html            Main app (same as the published Claude version)
+madoox-regime-firebase.html   Same app with real accounts via Firebase (needs your Firebase settings)
+ic_launcher.jpg               App icon (MD logo)
+firestore.rules               Database security rules for Firebase
+FIREBASE-SETUP.txt            Step-by-step Firebase setup
+madoox-android/               Android project that builds the APK
+  app/src/main/assets/index.html                  the app page shown inside the Android app
+  app/src/main/res/drawable/ic_launcher.jpg       the icon
+  app/src/main/AndroidManifest.xml                points to the icon
+  .github/workflows/build-apk.yml                 online APK build (GitHub Actions)
+
+To build the APK: upload the contents of madoox-android to a GitHub repository (the .github folder
+must be at the top level of the repository), then run the "Build APK" action and download the APK.
