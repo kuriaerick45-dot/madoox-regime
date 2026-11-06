@@ -1283,6 +1283,11 @@
     appId: "PASTE_APP_ID"
   };
 </script>
+<script>
+  // ===== AI ASSISTANT SERVER (see madoox-ai-server/SETUP.txt) =====
+  window.MADOOX_AI_URL = "https://round-waterfall-066d.kuriaerick45.workers.dev";    // e.g. "https://madoox-ai.yourname.workers.dev"
+  window.MADOOX_AI_TOKEN = "DMGwMSpbal2UsAUEb9zWrul12arwSIRg";  // same text as APP_TOKEN in Cloudflare (or leave empty if you did not set one)
+</script>
 </head>
 <body>
 
@@ -2501,6 +2506,21 @@
   let sampleFn = null;
   const sampleReady = (async () => {
     try { sampleFn = await claude.use("sample"); } catch (err) { sampleFn = null; }
+    if (!sampleFn && window.MADOOX_AI_URL) {
+      sampleFn = async function (turns) {
+        let resp;
+        try {
+          resp = await fetch(window.MADOOX_AI_URL, {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, window.MADOOX_AI_TOKEN ? { 'X-App-Token': window.MADOOX_AI_TOKEN } : {}),
+            body: JSON.stringify({ messages: turns })
+          });
+        } catch (e) { const er = new Error('network'); er.code = 'network'; throw er; }
+        if (resp.status === 429) { const er = new Error('rate'); er.code = 'rate_limited'; throw er; }
+        if (!resp.ok) { const er = new Error('server'); er.code = 'server'; throw er; }
+        return await resp.json();
+      };
+    }
   })();
 
   let recognition = null;
